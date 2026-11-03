@@ -1,4 +1,4 @@
-import { LANGS, LANG_NAMES, TEXTS } from './i18n.js';
+import { LANGS, TEXTS } from './i18n.js';
 import { PAGES, SIZES } from './render.js';
 
 const $ = (id) => document.getElementById(id);
@@ -13,11 +13,12 @@ let settings = await fetch('/api/settings').then((r) => r.json());
 let previewPage = ''; // leer = automatischer Wechsel
 let uiLang = [new URLSearchParams(location.search).get('lang'), localStorage.getItem('lang'), navigator.language.slice(0, 2)].find((l) => LANGS.includes(l)) || 'en';
 
-const langOptions = LANGS.map((id) => `<option value="${id}">${LANG_NAMES[id]}</option>`).join('');
+const langOptions = LANGS.map((id) => `<option value="${id}">${id.toUpperCase()}</option>`).join('');
 $('editorLang').innerHTML = langOptions;
 $('overlayLang').innerHTML = langOptions;
 
 let saveTimer;
+let saveFailed = false;
 function save(changes) {
   settings = { ...settings, ...changes };
   drawControls();
@@ -27,9 +28,10 @@ function save(changes) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings),
-    });
-    if (res.status === 401) return toLogin();
-    settings = await res.json();
+    }).catch(() => null);
+    if (res?.status === 401) return toLogin();
+    saveFailed = !res?.ok;
+    if (res?.ok) settings = await res.json();
     drawControls();
   }, 250);
 }
@@ -57,7 +59,9 @@ function drawControls() {
   const [w, h] = SIZES[settings.layout];
   document.documentElement.lang = uiLang;
   document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t[el.dataset.i18n]));
-  $('status').title = t.demo;
+  const status = saveFailed ? 'saveError' : 'demo';
+  $('status').textContent = $('status').title = t[status];
+  $('status').classList.toggle('err', saveFailed);
   $('intro').setAttribute('aria-label', t.loading);
   $('editorLang').setAttribute('aria-label', t.langLabel);
   $('editorLang').value = uiLang;

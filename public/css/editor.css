@@ -50,6 +50,7 @@ header {
 @media (prefers-reduced-motion: reduce) { .brand-mark { transition: none; } }
 
 .status { --dot: #ffc800; display: inline-flex; align-items: center; gap: 8px; min-width: 0; font: 500 12px/1 var(--f-mono); color: var(--muted); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status.err { --dot: #ff5a5a; }
 .status::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot) 25%, transparent); }
 
 .account { display: flex; align-items: center; justify-content: flex-end; gap: 14px; color: var(--muted); font-size: 13px; }

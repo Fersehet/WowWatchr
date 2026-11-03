@@ -139,7 +139,7 @@ const LAYOUTS = {
       <div class="line"><span class="lbl">${v.t.timed}</span><span class="num">${v.timed}</span></div>
       ${each(v.runs, (r) => `
         <div class="line">
-          <div class="stack grow" style="gap:2px"><span style="font-size:14px;font-weight:500">${r.name}</span><span class="lbl">${r.time}</span></div>
+          <div class="stack grow" style="gap:2px"><span style="font-size:14px;font-weight:400">${r.name}</span><span class="lbl">${r.time}</span></div>
           <span class="num">${r.key}</span>
           <span class="chip ${r.cls}">${r.result}</span>
         </div>`)}`,

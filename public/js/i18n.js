@@ -1,6 +1,5 @@
 // Alle Texte von Overlay und Editor in den vier Sprachen.
 export const LANGS = ['de', 'en', 'ru', 'fr'];
-export const LANG_NAMES = { de: 'Deutsch', en: 'English', ru: 'Русский', fr: 'Français' };
 
 export const TEXTS = {
   de: {
@@ -12,12 +11,12 @@ export const TEXTS = {
     loginLocked: 'Zu viele Versuche. Bitte in 15 Minuten erneut probieren.',
     loginDisabled: 'Der Login ist auf diesem Server noch nicht eingerichtet: ADMIN_PASSWORD in der .env eintragen und den Server neu starten.',
     loginNoServer: 'Der WowWatchr-Server ist gerade nicht erreichbar.',
-    character: 'Charakter', mplus: 'Mythisch+', raid: 'Schlachtzug', recent: 'Letzte Dungeons', season: 'Season',
+    character: 'Charakter', mplus: 'Mythisch+', raid: 'Schlachtzug', recent: 'Letzte Dungeons', season: 'Saison',
     ilvl: 'Itemlevel', score: 'M+-Wertung', timed: 'In der Zeit', best: 'Bester Key', progress: 'Fortschritt', kills: 'Kills', parse: 'Bester Parse',
     portrait: 'Platzhalter für das Charakterbild',
     stat: { crit: 'Krit', haste: 'Tempo', mastery: 'Meisterschaft', versatility: 'Vielseitigkeit' },
     diff: { normal: 'Normal', heroic: 'Heroisch', mythic: 'Mythisch' }, diffShort: { normal: 'N', heroic: 'H', mythic: 'M' },
-    demo: 'Demo-Modus (Beispieldaten)', editorLang: 'Sprache', name: 'Name', realm: 'Realm',
+    demo: 'Demo-Modus (Beispieldaten)', saveError: 'Speichern fehlgeschlagen, Server prüfen', editorLang: 'Sprache', name: 'Name', realm: 'Realm',
     layout: 'Layout', layoutA: 'Klassik', layoutC: 'Leiste', layoutD: 'Seitenleiste',
     pages: 'Seiten', interval: 'Wechsel alle (Sekunden)', overlayLang: 'Sprache im Overlay', accent: 'Akzentfarbe', accentReset: 'Standardfarbe',
     obs: 'In OBS einbinden', linkRotate: 'Automatischer Wechsel', copy: 'Kopieren', copied: 'Kopiert!',
@@ -38,7 +37,7 @@ export const TEXTS = {
     portrait: 'Placeholder for the character portrait',
     stat: { crit: 'Crit', haste: 'Haste', mastery: 'Mastery', versatility: 'Versatility' },
     diff: { normal: 'Normal', heroic: 'Heroic', mythic: 'Mythic' }, diffShort: { normal: 'N', heroic: 'H', mythic: 'M' },
-    demo: 'Demo mode (sample data)', editorLang: 'Language', name: 'Name', realm: 'Realm',
+    demo: 'Demo mode (sample data)', saveError: 'Saving failed, check the server', editorLang: 'Language', name: 'Name', realm: 'Realm',
     layout: 'Layout', layoutA: 'Classic', layoutC: 'Bar', layoutD: 'Sidebar',
     pages: 'Pages', interval: 'Switch every (seconds)', overlayLang: 'Overlay language', accent: 'Accent colour', accentReset: 'Default colour',
     obs: 'Add to OBS', linkRotate: 'Automatic rotation', copy: 'Copy', copied: 'Copied!',
@@ -59,7 +58,7 @@ export const TEXTS = {
     portrait: 'Заглушка для портрета персонажа',
     stat: { crit: 'Крит', haste: 'Скорость', mastery: 'Искусность', versatility: 'Универсальность' },
     diff: { normal: 'Обычный', heroic: 'Героический', mythic: 'Эпохальный' }, diffShort: { normal: 'О', heroic: 'Г', mythic: 'Э' },
-    demo: 'Демо-режим (примерные данные)', editorLang: 'Язык', name: 'Имя', realm: 'Игровой мир',
+    demo: 'Демо-режим (примерные данные)', saveError: 'Не удалось сохранить, проверьте сервер', editorLang: 'Язык', name: 'Имя', realm: 'Игровой мир',
     layout: 'Макет', layoutA: 'Классика', layoutC: 'Полоса', layoutD: 'Боковая панель',
     pages: 'Страницы', interval: 'Смена каждые (секунд)', overlayLang: 'Язык оверлея', accent: 'Цвет акцента', accentReset: 'Цвет по умолчанию',
     obs: 'Добавить в OBS', linkRotate: 'Автоматическая смена', copy: 'Копировать', copied: 'Скопировано!',
@@ -76,11 +75,11 @@ export const TEXTS = {
     loginDisabled: 'La connexion n’est pas encore configurée sur ce serveur : ajoute ADMIN_PASSWORD dans .env et redémarre le serveur.',
     loginNoServer: 'Le serveur WowWatchr est injoignable pour le moment.',
     character: 'Personnage', mplus: 'Mythique+', raid: 'Raid', recent: 'Derniers donjons', season: 'Saison',
-    ilvl: 'Niveau d’objet', score: 'Cote M+', timed: 'Dans les temps', best: 'Meilleure clé', progress: 'Progression', kills: 'Boss vaincus', parse: 'Meilleur parse',
+    ilvl: 'Niveau d’objet', score: 'Score M+', timed: 'Dans les temps', best: 'Meilleure clé', progress: 'Progression', kills: 'Boss vaincus', parse: 'Meilleur parse',
     portrait: 'Emplacement du portrait du personnage',
     stat: { crit: 'Critique', haste: 'Hâte', mastery: 'Maîtrise', versatility: 'Polyvalence' },
     diff: { normal: 'Normal', heroic: 'Héroïque', mythic: 'Mythique' }, diffShort: { normal: 'N', heroic: 'H', mythic: 'M' },
-    demo: 'Mode démo (données d’exemple)', editorLang: 'Langue', name: 'Nom', realm: 'Royaume',
+    demo: 'Mode démo (données d’exemple)', saveError: 'Échec de l’enregistrement, vérifiez le serveur', editorLang: 'Langue', name: 'Nom', realm: 'Royaume',
     layout: 'Disposition', layoutA: 'Classique', layoutC: 'Barre', layoutD: 'Barre latérale',
     pages: 'Pages', interval: 'Changer toutes les (secondes)', overlayLang: 'Langue de l’overlay', accent: 'Couleur d’accent', accentReset: 'Couleur par défaut',
     obs: 'Ajouter à OBS', linkRotate: 'Rotation automatique', copy: 'Copier', copied: 'Copié !',
