@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and raid progress, as a card, a slim bar or a sidebar. You host it yourself, design the overlay in the editor, and OBS shows it as a browser source. WowWatchr is part of the Watchrs family next to [FaceitWatchr](https://github.com/Fersehet/FaceitWatchr) and [YoutubeWatchr](https://github.com/Fersehet/YoutubeWatchr).
+Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and raid progress, as a card, a slim bar or a sidebar. You host it yourself, design the overlay in the editor, and OBS shows it as a browser source.
 
 <p align="center">
   <img src="docs/screenshots/overlay.gif" alt="The Classic overlay switching through its three pages: Character, Mythic+ and Raid" width="640">
@@ -23,8 +23,6 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 
 **Editor:** pick a layout, switch pages on or off, change the accent colour, character name or overlay language. The preview and OBS follow every change right away.
 
-![The editor: switching between the Classic, Bar and Sidebar layouts, trying accent colours and renaming the character, with the preview updating live](docs/screenshots/editor.gif)
-
 ![Editor with the overlay preview](docs/screenshots/editor.png)
 
 **Classic** (640 × 270): a card in the corner.
@@ -40,10 +38,6 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 <p align="center">
   <img src="docs/screenshots/layout-sidebar.png" alt="Sidebar layout: Character, Mythic+ and Raid page" width="720">
 </p>
-
-**Sign-in:** the editor needs a login, the overlay for OBS does not.
-
-![Sign-in page](docs/screenshots/login.png)
 
 The screenshots show the sample character of the demo mode.
 
