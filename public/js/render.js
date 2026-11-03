@@ -106,7 +106,7 @@ const LAYOUTS = {
       <div class="div"></div>
       <div class="row" style="gap:10px">${each(v.runs, (r) => `
         <div class="tile stack" style="gap:3px">
-          <div class="row" style="gap:6px"><span style="font-size:17px;font-weight:700">${r.key}</span><span class="result ${r.cls}">${r.result}</span></div>
+          <div class="row" style="gap:6px"><span style="font-size:17px;font-weight:700">${r.key}</span><span class="result ${r.cls}">${r.result}</span><span class="rtime ${r.cls}">${r.time}</span></div>
           <div class="name">${r.name}</div>
         </div>`)}
       </div>`,
