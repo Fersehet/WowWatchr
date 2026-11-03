@@ -2,13 +2,16 @@ import { LANGS, LANG_NAMES, TEXTS } from './i18n.js';
 import { PAGES, SIZES } from './render.js';
 
 const $ = (id) => document.getElementById(id);
-const DEFAULT_ACCENT = '#e8b64c';
+const DEFAULT_ACCENT = '#ffd100';
 const LAYOUT_NAMES = { a: 'layoutA', c: 'layoutC', d: 'layoutD' };
 
+// Sitzung abgelaufen: zurück zum Login
+const toLogin = () => (location.href = `/login.html?next=${encodeURIComponent(location.pathname + location.search)}`);
+
+$('intro').querySelector('.intro-bar i').style.setProperty('--p', 0.6);
 let settings = await fetch('/api/settings').then((r) => r.json());
 let previewPage = ''; // leer = automatischer Wechsel
-let uiLang = LANGS.includes(localStorage.getItem('lang')) ? localStorage.getItem('lang') : navigator.language.slice(0, 2);
-if (!LANGS.includes(uiLang)) uiLang = 'en';
+let uiLang = [new URLSearchParams(location.search).get('lang'), localStorage.getItem('lang'), navigator.language.slice(0, 2)].find((l) => LANGS.includes(l)) || 'en';
 
 const langOptions = LANGS.map((id) => `<option value="${id}">${LANG_NAMES[id]}</option>`).join('');
 $('editorLang').innerHTML = langOptions;
@@ -20,11 +23,13 @@ function save(changes) {
   drawControls();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
-    settings = await fetch('/api/settings', {
+    const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings),
-    }).then((r) => r.json());
+    });
+    if (res.status === 401) return toLogin();
+    settings = await res.json();
     drawControls();
   }, 250);
 }
@@ -34,7 +39,7 @@ function linkRow(label, path) {
   const t = TEXTS[uiLang];
   const row = document.createElement('div');
   row.className = 'link';
-  row.innerHTML = `<span></span><div class="inline"><input readonly /><button type="button"></button></div>`;
+  row.innerHTML = `<span></span><div class="row"><input readonly /><button type="button"></button></div>`;
   row.querySelector('span').textContent = label;
   row.querySelector('input').value = url;
   const button = row.querySelector('button');
@@ -52,6 +57,9 @@ function drawControls() {
   const [w, h] = SIZES[settings.layout];
   document.documentElement.lang = uiLang;
   document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t[el.dataset.i18n]));
+  $('status').title = t.demo;
+  $('intro').setAttribute('aria-label', t.loading);
+  $('editorLang').setAttribute('aria-label', t.langLabel);
   $('editorLang').value = uiLang;
   $('overlayLang').value = settings.lang;
   $('accent').value = settings.accent;
@@ -61,25 +69,24 @@ function drawControls() {
   $('layouts').replaceChildren(...Object.keys(SIZES).map((id) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = id === settings.layout ? 'choice on' : 'choice';
+    button.className = 'choice';
     button.setAttribute('aria-pressed', id === settings.layout);
-    button.innerHTML = `<b></b><small>${SIZES[id][0]} × ${SIZES[id][1]}</small>`;
-    button.querySelector('b').textContent = t[LAYOUT_NAMES[id]];
+    button.innerHTML = `<span></span><small>${SIZES[id][0]} × ${SIZES[id][1]}</small>`;
+    button.querySelector('span').textContent = t[LAYOUT_NAMES[id]];
     button.addEventListener('click', () => save({ layout: id }));
     return button;
   }));
 
   const enabled = PAGES.filter((page) => settings.pages[page]);
   $('pages').replaceChildren(...PAGES.map((page) => {
-    const label = document.createElement('label');
-    label.className = 'check';
-    label.innerHTML = '<input type="checkbox" /><span></span>';
-    const box = label.querySelector('input');
+    const item = document.createElement('li');
+    item.innerHTML = '<label><input type="checkbox" /><span></span></label>';
+    const box = item.querySelector('input');
     box.checked = settings.pages[page];
     box.disabled = enabled.length === 1 && settings.pages[page]; // mindestens eine Seite bleibt an
     box.addEventListener('change', () => save({ pages: { ...settings.pages, [page]: box.checked } }));
-    label.querySelector('span').textContent = t[page];
-    return label;
+    item.querySelector('span').textContent = t[page];
+    return item;
   }));
 
   $('links').replaceChildren(linkRow(t.linkRotate, '/overlay'), ...PAGES.map((page) => linkRow(t[page], `/overlay/${page}`)));
@@ -89,7 +96,6 @@ function drawControls() {
   $('tabs').replaceChildren(...['', ...PAGES].map((page) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = page === previewPage ? 'tab on' : 'tab';
     button.setAttribute('aria-pressed', page === previewPage);
     button.textContent = page ? t[page] : t.auto;
     button.addEventListener('click', () => {
@@ -129,6 +135,16 @@ $('realm').addEventListener('input', (e) => save({ realm: e.target.value }));
 $('interval').addEventListener('change', (e) => save({ interval: Number(e.target.value) }));
 $('accent').addEventListener('input', (e) => save({ accent: e.target.value }));
 $('accentReset').addEventListener('click', () => save({ accent: DEFAULT_ACCENT }));
+$('logout').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  location.href = '/login.html';
+});
 new ResizeObserver(drawPreview).observe($('stage').parentElement);
 
 drawControls();
+const me = await fetch('/api/me').then((r) => r.json()).catch(() => null);
+if (me?.user) $('accountName').textContent = me.user;
+
+// Ladebildschirm ausblenden, sobald alles steht (mindestens so lange, bis das Logo aufgebaut ist)
+$('intro').querySelector('.intro-bar i').style.setProperty('--p', 1);
+setTimeout(() => $('intro').classList.add('done'), Math.max(0, 1300 - performance.now()));
