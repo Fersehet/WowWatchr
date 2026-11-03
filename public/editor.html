@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WowWatchr</title>
+    <link rel="icon" href="/logo.svg" />
+    <link rel="stylesheet" href="/css/editor.css" />
+  </head>
+  <body>
+    <header class="top">
+      <img src="/logo.svg" alt="" width="40" height="40" />
+      <div class="brand">Wow<span>Watchr</span></div>
+      <div class="status" data-i18n="demo"></div>
+      <label class="langpick"><span class="sr" data-i18n="editorLang"></span><select id="editorLang"></select></label>
+    </header>
+    <main class="layout">
+      <aside class="side">
+        <section>
+          <h2 data-i18n="character"></h2>
+          <label><span data-i18n="name"></span><input id="name" maxlength="40" /></label>
+          <label><span data-i18n="realm"></span><input id="realm" maxlength="40" /></label>
+        </section>
+        <section>
+          <h2 data-i18n="layout"></h2>
+          <div class="choices" id="layouts"></div>
+        </section>
+        <section>
+          <h2 data-i18n="pages"></h2>
+          <div id="pages"></div>
+          <label><span data-i18n="interval"></span><input id="interval" type="number" min="3" max="120" /></label>
+        </section>
+        <section>
+          <label><span data-i18n="overlayLang"></span><select id="overlayLang"></select></label>
+          <label><span data-i18n="accent"></span>
+            <span class="inline"><input id="accent" type="color" /><button id="accentReset" type="button" data-i18n="accentReset"></button></span>
+          </label>
+        </section>
+        <section>
+          <h2 data-i18n="obs"></h2>
+          <div id="links"></div>
+          <p class="hint" id="obsHint"></p>
+        </section>
+      </aside>
+      <section class="preview">
+        <div class="tabs" id="tabs" role="group"></div>
+        <div class="stage" id="stage"><iframe id="frame" title="WowWatchr"></iframe></div>
+        <p class="hint" data-i18n="checker"></p>
+      </section>
+    </main>
+    <script type="module" src="/js/editor.js"></script>
+  </body>
+</html>

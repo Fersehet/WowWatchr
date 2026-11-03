@@ -1,0 +1,25 @@
+{
+  "name": "wowwatchr",
+  "version": "0.1.0",
+  "description": "World of Warcraft stats overlay for OBS: character, Mythic+ and raid pages in three layouts.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "test": "node --import tsx --test src/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "tsx": "^4.20.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.15.0",
+    "typescript": "^5.9.3"
+  }
+}

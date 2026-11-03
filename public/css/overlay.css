@@ -1,0 +1,59 @@
+@import url('/fonts/fonts.css');
+
+html, body { margin: 0; background: transparent; overflow: hidden; }
+* { box-sizing: border-box; }
+#overlay { transition: opacity .35s; }
+#overlay.fading { opacity: 0; }
+
+.ov { font-family: 'Geist', 'Segoe UI', system-ui, sans-serif; color: #f2f2f2; font-variant-numeric: tabular-nums; }
+.lbl { font-size: 12px; font-weight: 500; color: #b1b7c3; letter-spacing: .04em; }
+.big { font-size: 24px; font-weight: 700; line-height: 1.1; }
+.num { font-size: 18px; font-weight: 700; }
+.accent { color: var(--accent); }
+.chip { display: inline-block; text-align: center; font-size: 13px; font-weight: 700; padding: 3px 0; width: 38px; border-radius: 6px; flex: none; background: rgba(255,255,255,.1); }
+.chip.up { color: #46d3b0; background: rgba(70,211,176,.16); }
+.chip.down { color: #ff8080; background: rgba(255,107,107,.18); }
+.track { height: 8px; border-radius: 4px; background: rgba(255,255,255,.14); overflow: hidden; }
+.fill { height: 100%; border-radius: 4px; background: var(--accent); }
+.row { display: flex; align-items: center; gap: 12px; }
+.between { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; }
+.end { align-items: flex-end; }
+.grow { flex: 1 1 0; min-width: 0; }
+.avatar { flex: none; border-radius: 50%; border: 3px solid var(--accent); background: #3a3e48; display: block; }
+.title { font-size: 22px; font-weight: 700; line-height: 1.15; }
+.name { font-size: 15px; font-weight: 500; }
+.time { font-size: 14px; color: #d3d7df; }
+
+/* A: Klassik */
+.a { width: 640px; height: 270px; padding: 20px 24px; border-radius: 18px; background: rgba(38,40,46,.96); display: flex; flex-direction: column; }
+.a .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: auto; }
+.a .bottom { margin-top: auto; }
+
+/* C: Leiste */
+.c { width: 1060px; height: 84px; padding: 0 28px 0 18px; border-radius: 42px; background: rgba(18,20,26,.74); border: 1px solid rgba(255,255,255,.2); display: flex; align-items: center; gap: 18px; }
+.c .div { width: 1px; height: 44px; background: rgba(255,255,255,.2); flex: none; }
+.c .lbl { white-space: nowrap; }
+.c .tile { width: 152px; flex: none; }
+.c .tile .name { font-size: 12px; font-weight: 400; color: #d3d7df; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c .result.up { color: #46d3b0; }
+.c .result.down { color: #ff8080; }
+.c .result { font-size: 13px; font-weight: 700; }
+.pips { display: flex; gap: 3px; }
+.pips i { display: block; height: 8px; flex: 1 1 0; border-radius: 2px; background: rgba(255,255,255,.16); }
+.pips i.on { background: var(--accent); }
+
+/* D: Seitenleiste, Schwierigkeiten in den typischen Qualitätsfarben */
+.d { width: 300px; height: 590px; background: #0f1116; display: flex; flex-direction: column; border-top: 3px solid var(--accent); }
+.d .head { padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #262a33; font-size: 14px; font-weight: 600; }
+.d .line { padding: 12px 16px; border-bottom: 1px solid #262a33; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.d .line:last-child { border-bottom: 0; }
+.d .hero { align-items: center; padding: 22px 16px 18px; border-bottom: 1px solid #262a33; }
+.d .diff { padding: 16px; border-bottom: 1px solid #262a33; justify-content: center; gap: 12px; }
+.d .diff:last-child { border-bottom: 0; }
+.d .diff b { color: #f2f2f2; }
+.d .diff .fill { background: var(--q); }
+.d .diff .dname { font-size: 18px; font-weight: 600; color: var(--q); }
+.q-normal { --q: #5fd068; }
+.q-heroic { --q: #5aa9ff; }
+.q-mythic { --q: #c58bff; }

@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>WowWatchr Overlay</title>
+    <link rel="stylesheet" href="/css/overlay.css" />
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <script type="module">
+      import { PAGES, renderPage } from '/js/render.js';
+
+      const container = document.getElementById('overlay');
+      const fixedPage = location.pathname.split('/')[2]; // leer = automatischer Wechsel
+      let settings, state, shown;
+
+      const currentPage = () => {
+        if (fixedPage) return fixedPage;
+        const pages = PAGES.filter((page) => settings.pages[page]);
+        // Hängt nur an der Uhrzeit, so zeigen OBS und Editor-Vorschau dieselbe Seite
+        return pages[Math.floor(Date.now() / (settings.interval * 1000)) % pages.length];
+      };
+
+      function draw() {
+        shown = currentPage();
+        renderPage(container, settings, state, shown);
+      }
+
+      async function load() {
+        [settings, state] = await Promise.all(['/api/settings', '/api/state'].map((url) => fetch(url).then((r) => r.json())));
+        draw();
+      }
+
+      await load();
+
+      setInterval(() => {
+        if (currentPage() === shown || container.classList.contains('fading')) return;
+        container.classList.add('fading');
+        setTimeout(() => {
+          draw();
+          container.classList.remove('fading');
+        }, 350);
+      }, 250);
+
+      new EventSource('/api/events').addEventListener('settings', load);
+    </script>
+  </body>
+</html>
