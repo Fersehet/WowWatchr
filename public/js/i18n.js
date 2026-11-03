@@ -1,0 +1,58 @@
+// Alle Texte von Overlay und Editor in den vier Sprachen.
+export const LANGS = ['de', 'en', 'ru', 'fr'];
+export const LANG_NAMES = { de: 'Deutsch', en: 'English', ru: 'Русский', fr: 'Français' };
+
+export const TEXTS = {
+  de: {
+    character: 'Charakter', mplus: 'Mythisch+', raid: 'Schlachtzug', recent: 'Letzte Dungeons', season: 'Season',
+    ilvl: 'Itemlevel', score: 'M+-Wertung', timed: 'In der Zeit', best: 'Bester Key', progress: 'Fortschritt', kills: 'Kills', parse: 'Bester Parse',
+    portrait: 'Platzhalter für das Charakterbild',
+    stat: { crit: 'Krit', haste: 'Tempo', mastery: 'Meisterschaft', versatility: 'Vielseitigkeit' },
+    diff: { normal: 'Normal', heroic: 'Heroisch', mythic: 'Mythisch' }, diffShort: { normal: 'N', heroic: 'H', mythic: 'M' },
+    demo: 'Demo-Modus (Beispieldaten)', editorLang: 'Sprache', name: 'Name', realm: 'Realm',
+    layout: 'Layout', layoutA: 'Klassik', layoutC: 'Leiste', layoutD: 'Seitenleiste',
+    pages: 'Seiten', interval: 'Wechsel alle (Sekunden)', overlayLang: 'Sprache im Overlay', accent: 'Akzentfarbe', accentReset: 'Standardfarbe',
+    obs: 'In OBS einbinden', linkRotate: 'Automatischer Wechsel', copy: 'Kopieren', copied: 'Kopiert!',
+    obsHint: 'OBS: Quelle hinzufügen → Browser → URL einfügen. Breite {w}, Höhe {h}.',
+    preview: 'Vorschau', auto: 'Wechsel', checker: 'Schachbrett = in OBS durchsichtig',
+  },
+  en: {
+    character: 'Character', mplus: 'Mythic+', raid: 'Raid', recent: 'Recent dungeons', season: 'Season',
+    ilvl: 'Item level', score: 'M+ rating', timed: 'In time', best: 'Best key', progress: 'Progress', kills: 'Kills', parse: 'Best parse',
+    portrait: 'Placeholder for the character portrait',
+    stat: { crit: 'Crit', haste: 'Haste', mastery: 'Mastery', versatility: 'Versatility' },
+    diff: { normal: 'Normal', heroic: 'Heroic', mythic: 'Mythic' }, diffShort: { normal: 'N', heroic: 'H', mythic: 'M' },
+    demo: 'Demo mode (sample data)', editorLang: 'Language', name: 'Name', realm: 'Realm',
+    layout: 'Layout', layoutA: 'Classic', layoutC: 'Bar', layoutD: 'Sidebar',
+    pages: 'Pages', interval: 'Switch every (seconds)', overlayLang: 'Overlay language', accent: 'Accent colour', accentReset: 'Default colour',
+    obs: 'Add to OBS', linkRotate: 'Automatic rotation', copy: 'Copy', copied: 'Copied!',
+    obsHint: 'OBS: Add source → Browser → paste the URL. Width {w}, height {h}.',
+    preview: 'Preview', auto: 'Rotation', checker: 'Checkerboard = transparent in OBS',
+  },
+  ru: {
+    character: 'Персонаж', mplus: 'Эпохальный+', raid: 'Рейд', recent: 'Последние подземелья', season: 'Сезон',
+    ilvl: 'Ур. предметов', score: 'Рейтинг М+', timed: 'В срок', best: 'Лучший ключ', progress: 'Прогресс', kills: 'Убийства', parse: 'Лучший парс',
+    portrait: 'Заглушка для портрета персонажа',
+    stat: { crit: 'Крит', haste: 'Скорость', mastery: 'Искусность', versatility: 'Универсальность' },
+    diff: { normal: 'Обычный', heroic: 'Героический', mythic: 'Эпохальный' }, diffShort: { normal: 'О', heroic: 'Г', mythic: 'Э' },
+    demo: 'Демо-режим (примерные данные)', editorLang: 'Язык', name: 'Имя', realm: 'Игровой мир',
+    layout: 'Макет', layoutA: 'Классика', layoutC: 'Полоса', layoutD: 'Боковая панель',
+    pages: 'Страницы', interval: 'Смена каждые (секунд)', overlayLang: 'Язык оверлея', accent: 'Цвет акцента', accentReset: 'Цвет по умолчанию',
+    obs: 'Добавить в OBS', linkRotate: 'Автоматическая смена', copy: 'Копировать', copied: 'Скопировано!',
+    obsHint: 'OBS: Добавить источник → Браузер → вставить URL. Ширина {w}, высота {h}.',
+    preview: 'Предпросмотр', auto: 'Смена', checker: 'Шахматный фон = прозрачно в OBS',
+  },
+  fr: {
+    character: 'Personnage', mplus: 'Mythique+', raid: 'Raid', recent: 'Derniers donjons', season: 'Saison',
+    ilvl: 'Niveau d’objet', score: 'Cote M+', timed: 'Dans les temps', best: 'Meilleure clé', progress: 'Progression', kills: 'Boss vaincus', parse: 'Meilleur parse',
+    portrait: 'Emplacement du portrait du personnage',
+    stat: { crit: 'Critique', haste: 'Hâte', mastery: 'Maîtrise', versatility: 'Polyvalence' },
+    diff: { normal: 'Normal', heroic: 'Héroïque', mythic: 'Mythique' }, diffShort: { normal: 'N', heroic: 'H', mythic: 'M' },
+    demo: 'Mode démo (données d’exemple)', editorLang: 'Langue', name: 'Nom', realm: 'Royaume',
+    layout: 'Disposition', layoutA: 'Classique', layoutC: 'Barre', layoutD: 'Barre latérale',
+    pages: 'Pages', interval: 'Changer toutes les (secondes)', overlayLang: 'Langue de l’overlay', accent: 'Couleur d’accent', accentReset: 'Couleur par défaut',
+    obs: 'Ajouter à OBS', linkRotate: 'Rotation automatique', copy: 'Copier', copied: 'Copié !',
+    obsHint: 'OBS : Ajouter une source → Navigateur → coller l’URL. Largeur {w}, hauteur {h}.',
+    preview: 'Aperçu', auto: 'Rotation', checker: 'Damier = transparent dans OBS',
+  },
+};
