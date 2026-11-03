@@ -1,18 +1,68 @@
 import express from 'express';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { Auth, type LoginError } from './auth.ts';
 import { demoState } from './demo.ts';
 import { loadSettings, sanitize, saveSettings } from './settings.ts';
 
 const ROOT = join(import.meta.dirname, '..');
+if (existsSync(join(ROOT, '.env'))) process.loadEnvFile(join(ROOT, '.env'));
+
 const PUBLIC = join(ROOT, 'public');
-const SETTINGS_FILE = join(ROOT, 'data', 'settings.json');
+const DATA = join(ROOT, 'data');
+const SETTINGS_FILE = join(DATA, 'settings.json');
 const PORT = Number(process.env.PORT) || 3312;
+const HOST = process.env.HOST || '0.0.0.0';
 
 let settings = loadSettings(SETTINGS_FILE);
 const listeners = new Set<Response>();
+const auth = new Auth(join(DATA, 'session-secret'), process.env.SESSION_SECRET?.trim() || '', {
+  name: process.env.ADMIN_USER?.trim() || 'admin',
+  password: process.env.ADMIN_PASSWORD || '',
+});
 
 const app = express();
+// Hinter einem Reverse Proxy: echte Besucher-IP (für die Login-Sperre) und https-Erkennung (für sichere Cookies)
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+
+/** Ohne Login erreichbar: Overlay und seine Daten nur lesend (für OBS), Schriften, Bilder und der Login selbst. */
+function isPublic(req: Request) {
+  if (['/api/login', '/api/logout', '/api/me'].includes(req.path)) return true;
+  if (req.method !== 'GET' && req.method !== 'HEAD') return false;
+  return (
+    req.path.startsWith('/fonts/') ||
+    /^\/overlay(\/[\w-]+)?$/.test(req.path) ||
+    [
+      '/api/settings', '/api/state', '/api/events',
+      '/login.html', '/css/editor.css', '/css/overlay.css', '/js/render.js', '/js/i18n.js',
+      '/favicon.svg', '/logo.svg', '/logo-wordmark.svg',
+    ].includes(req.path)
+  );
+}
+
+const hostOf = (url: string) => URL.parse(url)?.host ?? null;
+
+// Editor und alle Änderungen nur nach Login, egal ob über localhost, LAN oder eine Domain
+app.use((req, res, next) => {
+  if (isPublic(req)) return next();
+  if (auth.user(req)) {
+    // Änderungen nur von der eigenen Seite aus, nicht von fremden Seiten im selben Browser
+    const origin = req.headers.origin;
+    if (req.method !== 'GET' && req.method !== 'HEAD' && origin && hostOf(origin) !== req.headers.host) {
+      return void res.status(403).json({ error: 'Fremde Herkunft' });
+    }
+    return next();
+  }
+  if (req.path.startsWith('/api/')) return void res.status(401).json({ error: 'Bitte anmelden' });
+  if (req.method === 'GET') {
+    // Sprache aus dem Link auch auf der Login-Seite verwenden
+    const lang = typeof req.query.lang === 'string' ? `&lang=${encodeURIComponent(req.query.lang)}` : '';
+    return res.redirect(`/login.html?next=${encodeURIComponent(req.originalUrl)}${lang}`);
+  }
+  res.status(404).send('Nicht gefunden');
+});
+
 app.use(express.json());
 app.use(express.static(PUBLIC));
 
@@ -21,6 +71,24 @@ app.get(['/overlay', '/overlay/:page'], (req, res) => {
   const { page } = req.params as { page?: string };
   if (page && !['character', 'mplus', 'raid'].includes(page)) return void res.sendStatus(404);
   res.sendFile(join(PUBLIC, 'overlay.html'));
+});
+
+// Login für den Editor
+app.get('/api/me', (req, res) => {
+  res.set('Cache-Control', 'no-store').json({ user: auth.user(req), loginEnabled: auth.enabled });
+});
+
+const LOGIN_ERRORS: Record<LoginError, number> = { disabled: 503, locked: 429, wrong: 401 };
+
+app.post('/api/login', (req, res) => {
+  const error = auth.login(req, res, String(req.body?.user ?? ''), String(req.body?.password ?? ''));
+  if (error) return void res.status(LOGIN_ERRORS[error]).json({ error });
+  res.json({ ok: true });
+});
+
+app.post('/api/logout', (_req, res) => {
+  auth.logout(res);
+  res.status(204).end();
 });
 
 app.get('/api/settings', (_req, res) => void res.json(settings));
@@ -41,5 +109,7 @@ app.get('/api/events', (req, res) => {
   req.on('close', () => listeners.delete(res));
 });
 
-// Nur lokal erreichbar, deshalb ohne Anmeldung
-app.listen(PORT, '127.0.0.1', () => console.log(`WowWatchr: http://localhost:${PORT}`));
+app.listen(PORT, HOST, () => {
+  console.log(`WowWatchr: http://localhost:${PORT}`);
+  if (!auth.enabled) console.log('Hinweis: ADMIN_PASSWORD fehlt in der .env, ohne Passwort kann sich niemand im Editor anmelden.');
+});
