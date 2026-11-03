@@ -23,7 +23,7 @@ export const DEFAULTS: Settings = {
   pages: { character: true, mplus: true, raid: true },
   interval: 10,
   lang: 'en',
-  accent: '#e8b64c',
+  accent: '#ffd100',
 };
 
 function text(value: unknown, fallback: string): string {

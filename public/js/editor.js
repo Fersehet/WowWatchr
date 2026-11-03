@@ -2,7 +2,7 @@ import { LANGS, LANG_NAMES, TEXTS } from './i18n.js';
 import { PAGES, SIZES } from './render.js';
 
 const $ = (id) => document.getElementById(id);
-const DEFAULT_ACCENT = '#e8b64c';
+const DEFAULT_ACCENT = '#ffd100';
 const LAYOUT_NAMES = { a: 'layoutA', c: 'layoutC', d: 'layoutD' };
 
 // Sitzung abgelaufen: zurück zum Login
