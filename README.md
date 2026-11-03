@@ -11,13 +11,12 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
   <img src="docs/screenshots/overlay.gif" alt="The Classic overlay switching through its three pages: Character, Mythic+ and Raid" width="640">
 </p>
 
-- Three pages: **Character** (item level, Mythic+ rating, secondary stats), **Mythic+** (rating, best key, recent dungeons) and **Raid** (progress, kills and best parse for Normal, Heroic and Mythic)
+- Three pages: **Character** (item level, Mythic+ rating, secondary stats), **Mythic+** (rating, best timed key, dungeons timed this season, best runs) and **Raid** (progress and kills for Normal, Heroic and Mythic in the current raid)
 - Three layouts: a **Classic** card, a slim **Bar** and a tall **Sidebar**
 - One OBS URL that switches through the pages on its own, or one URL per page
 - An editor in your browser with a live preview, protected by a login, and every change shows up in OBS right away
+- Real character data from the official Blizzard API, with your own free key
 - Editor and overlay in English, German, Russian and French
-
-> **Status:** demo mode. The overlay and editor work, but they show sample data. Real character data comes next.
 
 ## What it looks like
 
@@ -45,7 +44,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 
 ![Sign-in page](docs/screenshots/login.png)
 
-The screenshots show the sample character of the demo mode.
+The screenshots show the sample data that the overlay uses until your Blizzard key is set up.
 
 ## Requirements
 
@@ -74,6 +73,25 @@ npm start
 
 Open **http://localhost:3312** in your browser and sign in with user `admin` and your password. Enter your character name and realm in the editor and pick a layout.
 
+## Real data
+
+WowWatchr loads your character from the official Blizzard API. For that you need your own free Blizzard key. Without it, the overlay shows sample data.
+
+1. Sign in at [develop.battle.net](https://develop.battle.net) with your Battle.net account.
+2. Open **API Access** and click **Create Client**.
+3. Name it `WowWatchr`, enter `http://localhost` as redirect URL, tick **I do not have a service URL for this client**, write a short intended use such as "Stats overlay for my own stream" and save.
+4. Copy the **Client ID** and **Client Secret** into `.env`:
+
+   ```env
+   BLIZZARD_CLIENT_ID=your-client-id
+   BLIZZARD_CLIENT_SECRET=your-client-secret
+   ```
+
+5. Restart the server. A new key can take up to 15 minutes to start working.
+6. Type your character's **name**, **realm** and **region** into the editor. The status at the top of the editor shows whether real data is running.
+
+The keys stay on your server; OBS and the overlay never see them. WowWatchr refreshes the data every five minutes. Blizzard updates a character when you log out, so new runs and kills show up after that. Best parses need Warcraft Logs and are not shown yet.
+
 ## Adding it to OBS
 
 1. In the editor under **Add to OBS**, copy a URL, e.g. `http://localhost:3312/overlay`.
@@ -86,7 +104,10 @@ Open **http://localhost:3312** in your browser and sign in with user `admin` and
 
 - **The sign-in page says login is not set up:** put `ADMIN_PASSWORD` into `.env` and restart the server. On Windows, make sure the file is called `.env` and not `.env.txt`.
 - **"Too many attempts":** after 10 wrong passwords the login is locked for up to 15 minutes.
-- **The overlay shows Vaelric from Blackrock and not my character:** WowWatchr is still in demo mode and shows sample data. Real character data comes in a later version.
+- **The overlay shows Vaelric from Blackrock and not my character:** that is the sample data. Check the status at the top of the editor and the three entries below.
+- **"No Blizzard key":** put `BLIZZARD_CLIENT_ID` and `BLIZZARD_CLIENT_SECRET` into `.env` and restart the server.
+- **"Blizzard unreachable":** a new key needs up to 15 minutes. If it stays, check both values in `.env` and look for "Blizzard" in the server log.
+- **"Character not found":** check the spelling of the name (accents count), the realm and the region. A character that has not logged in for a long time can be missing at Blizzard until you log in and out once.
 - **Nothing shows up in OBS:** open the OBS URL in your browser. If it stays empty there, copy the URL again from the editor under **Add to OBS**. If the server runs on another machine, use its IP instead of `localhost`.
 - **The overlay is cut off in OBS:** set the width and height of the Browser source to the size of your layout: Classic 640 × 270, Bar 1060 × 84, Sidebar 300 × 590.
 - **The overlay doesn't switch pages:** the switching URL only rotates through pages that are ticked under **Pages**, so tick at least two. The time per page is set under **Switch every (seconds)**.
@@ -101,7 +122,7 @@ npm install
 npm start
 ```
 
-Your settings live in `data/` and are kept. More settings (port, login) are listed in `.env.example`.
+Your settings live in `data/` and are kept. More settings (port, login, Blizzard key) are listed in `.env.example`.
 
 ## License
 
