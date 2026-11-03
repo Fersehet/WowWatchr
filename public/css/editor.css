@@ -1,0 +1,68 @@
+@import url('/fonts/fonts.css');
+
+/* Gleiche Grundlagen wie die anderen Watchrs, Akzent in Gold */
+:root {
+  --bg: #0d1017;
+  --panel: #1a2130;
+  --panel-2: #131823;
+  --border: #2a3346;
+  --text: #e9edf5;
+  --muted: #9aa5ba;
+  --accent: #e8b64c;
+  --accent-ink: #1a1408;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.45 'Geist', 'Segoe UI', system-ui, sans-serif; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+.top { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--border); }
+.brand { font-size: 22px; font-weight: 700; }
+.brand span { color: var(--accent); }
+.status { font-size: 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; }
+.langpick { margin: 0 0 0 auto; }
+
+.layout { display: flex; flex-wrap: wrap; align-items: flex-start; }
+.side { flex: 0 1 380px; min-width: 0; border-right: 1px solid var(--border); }
+.side section { padding: 18px 24px; border-bottom: 1px solid var(--border); }
+.side h2 { margin: 0 0 12px; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.preview { flex: 999 1 480px; min-width: 0; padding: 24px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+
+label { display: block; margin-bottom: 12px; font-size: 14px; color: var(--muted); }
+label:last-child { margin-bottom: 0; }
+label > span:first-child { display: block; margin-bottom: 4px; }
+input, select, button { font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; min-height: 44px; }
+input, select { padding: 0 12px; width: 100%; }
+select { cursor: pointer; }
+input[type='color'] { flex: none; width: 64px; padding: 4px; cursor: pointer; }
+button { padding: 0 14px; cursor: pointer; white-space: nowrap; }
+button:hover { border-color: var(--muted); }
+.langpick select { width: auto; }
+.inline { display: flex; gap: 8px; }
+.inline input { min-width: 0; flex: 1 1 0; }
+.inline input[type='color'] { flex: none; }
+
+.choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.choice { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 10px; white-space: normal; text-align: left; min-height: 64px; }
+.choice b { font-weight: 600; }
+.choice small { color: var(--muted); font-size: 12px; }
+.choice.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+.check { display: flex; align-items: center; gap: 10px; color: var(--text); min-height: 32px; margin-bottom: 4px; }
+.check input { width: 18px; min-height: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.check span { margin: 0 !important; }
+#pages { margin-bottom: 12px; }
+
+.link { margin-bottom: 12px; font-size: 14px; color: var(--muted); }
+.link > span { display: block; margin-bottom: 4px; }
+.link input { font-size: 13px; }
+.hint { margin: 0; font-size: 13px; color: var(--muted); }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.stage { position: relative; overflow: hidden; border-radius: 8px; background: repeating-conic-gradient(#333a48 0 25%, #272d39 0 50%) 0 0 / 24px 24px; }
+/* Ohne eigenes color-scheme wäre der Hintergrund im Rahmen nicht durchsichtig */
+.stage iframe { color-scheme: normal; border: 0; display: block; transform-origin: 0 0; background: transparent; }
+@media (min-width: 900px) { .preview { position: sticky; top: 0; } }
