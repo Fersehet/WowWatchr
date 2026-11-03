@@ -16,9 +16,18 @@ let uiLang = [new URLSearchParams(location.search).get('lang'), localStorage.get
 const langOptions = LANGS.map((id) => `<option value="${id}">${id.toUpperCase()}</option>`).join('');
 $('editorLang').innerHTML = langOptions;
 $('overlayLang').innerHTML = langOptions;
+$('region').innerHTML = ['eu', 'us', 'kr', 'tw'].map((id) => `<option value="${id}">${id.toUpperCase()}</option>`).join('');
 
 let saveTimer;
 let saveFailed = false;
+let dataStatus = 'demo';
+
+// Zeigt im Kopf, ob echte Daten oder Beispieldaten laufen
+async function loadStatus() {
+  const state = await fetch('/api/state').then((r) => r.json()).catch(() => null);
+  dataStatus = state?.status ?? 'offline';
+  drawControls();
+}
 function save(changes) {
   settings = { ...settings, ...changes };
   drawControls();
@@ -59,13 +68,15 @@ function drawControls() {
   const [w, h] = SIZES[settings.layout];
   document.documentElement.lang = uiLang;
   document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t[el.dataset.i18n]));
-  const status = saveFailed ? 'saveError' : 'demo';
+  const status = saveFailed ? 'saveError' : { loading: 'dataLoading' }[dataStatus] ?? dataStatus;
   $('status').textContent = $('status').title = t[status];
-  $('status').classList.toggle('err', saveFailed);
+  $('status').classList.toggle('err', saveFailed || ['notFound', 'offline', 'noKey'].includes(dataStatus));
+  $('status').classList.toggle('ok', !saveFailed && dataStatus === 'live');
   $('intro').setAttribute('aria-label', t.loading);
   $('editorLang').setAttribute('aria-label', t.langLabel);
   $('editorLang').value = uiLang;
   $('overlayLang').value = settings.lang;
+  $('region').value = settings.region;
   $('accent').value = settings.accent;
   // Beim Tippen den Cursor nicht verlieren
   for (const id of ['name', 'realm', 'interval']) if (document.activeElement !== $(id)) $(id).value = settings[id];
@@ -136,6 +147,7 @@ $('editorLang').addEventListener('change', (e) => {
 $('overlayLang').addEventListener('change', (e) => save({ lang: e.target.value }));
 $('name').addEventListener('input', (e) => save({ name: e.target.value }));
 $('realm').addEventListener('input', (e) => save({ realm: e.target.value }));
+$('region').addEventListener('change', (e) => save({ region: e.target.value }));
 $('interval').addEventListener('change', (e) => save({ interval: Number(e.target.value) }));
 $('accent').addEventListener('input', (e) => save({ accent: e.target.value }));
 $('accentReset').addEventListener('click', () => save({ accent: DEFAULT_ACCENT }));
@@ -146,6 +158,8 @@ $('logout').addEventListener('click', async () => {
 new ResizeObserver(drawPreview).observe($('stage').parentElement);
 
 drawControls();
+loadStatus();
+new EventSource('/api/events').addEventListener('settings', loadStatus);
 const me = await fetch('/api/me').then((r) => r.json()).catch(() => null);
 if (me?.user) $('accountName').textContent = me.user;
 

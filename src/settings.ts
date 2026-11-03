@@ -5,11 +5,14 @@ export const LANGS = ['de', 'en', 'ru', 'fr'] as const;
 export type Lang = (typeof LANGS)[number];
 
 const LAYOUTS = ['a', 'c', 'd'] as const;
+export const REGIONS = ['eu', 'us', 'kr', 'tw'] as const;
+export type Region = (typeof REGIONS)[number];
 
 export interface Settings {
   layout: (typeof LAYOUTS)[number];
   name: string;
   realm: string;
+  region: Region;
   pages: { character: boolean; mplus: boolean; raid: boolean };
   interval: number;
   lang: Lang;
@@ -20,6 +23,7 @@ export const DEFAULTS: Settings = {
   layout: 'a',
   name: 'Vaelric',
   realm: 'Blackrock',
+  region: 'eu',
   pages: { character: true, mplus: true, raid: true },
   interval: 10,
   lang: 'en',
@@ -45,6 +49,7 @@ export function sanitize(input: unknown): Settings {
     layout: LAYOUTS.includes(raw.layout) ? raw.layout : DEFAULTS.layout,
     name: text(raw.name, DEFAULTS.name),
     realm: text(raw.realm, DEFAULTS.realm),
+    region: REGIONS.includes(raw.region) ? raw.region : DEFAULTS.region,
     pages,
     interval: Number.isFinite(interval) ? Math.min(120, Math.max(3, Math.round(interval))) : DEFAULTS.interval,
     lang: LANGS.includes(raw.lang) ? raw.lang : DEFAULTS.lang,
