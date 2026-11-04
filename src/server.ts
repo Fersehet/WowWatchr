@@ -52,10 +52,11 @@ function isPublic(req: Request) {
 
 const hostOf = (url: string) => URL.parse(url)?.host ?? null;
 
-// Editor und alle Änderungen nur nach Login, egal ob über localhost, LAN oder eine Domain
+// Editor und alle Änderungen nur nach Login, egal ob über localhost, LAN oder eine Domain.
+// Ohne ADMIN_PASSWORD gibt es keinen Login, dann ist der Editor für alle offen.
 app.use((req, res, next) => {
   if (isPublic(req)) return next();
-  if (auth.user(req)) {
+  if (!auth.enabled || auth.user(req)) {
     // Änderungen nur von der eigenen Seite aus, nicht von fremden Seiten im selben Browser
     const origin = req.headers.origin;
     if (req.method !== 'GET' && req.method !== 'HEAD' && origin && hostOf(origin) !== req.headers.host) {
@@ -84,7 +85,7 @@ app.get(['/overlay', '/overlay/:page'], (req, res) => {
 
 // Login für den Editor
 app.get('/api/me', (req, res) => {
-  res.set('Cache-Control', 'no-store').json({ user: auth.user(req), loginEnabled: auth.enabled });
+  res.set('Cache-Control', 'no-store').json({ user: auth.enabled ? auth.user(req) : null, loginEnabled: auth.enabled });
 });
 
 const LOGIN_ERRORS: Record<LoginError, number> = { disabled: 503, locked: 429, wrong: 401 };
@@ -131,5 +132,5 @@ app.get('/api/events', (req, res) => {
 app.listen(PORT, HOST, () => {
   console.log(`WowWatchr: http://localhost:${PORT}`);
   if (!blizzard.enabled) console.log('Hinweis: BLIZZARD_CLIENT_ID/BLIZZARD_CLIENT_SECRET fehlen in der .env, das Overlay zeigt Beispieldaten.');
-  if (!auth.enabled) console.log('Hinweis: ADMIN_PASSWORD fehlt in der .env, ohne Passwort kann sich niemand im Editor anmelden.');
+  if (!auth.enabled) console.log('Hinweis: ADMIN_PASSWORD fehlt in der .env, der Editor ist ohne Login offen. Jeder, der den Server erreicht, kann ihn ändern.');
 });

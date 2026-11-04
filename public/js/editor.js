@@ -167,6 +167,8 @@ loadStatus();
 new EventSource('/api/events').addEventListener('settings', loadStatus);
 const me = await fetch('/api/me').then((r) => r.json()).catch(() => null);
 if (me?.user) $('accountName').textContent = me.user;
+// Ohne Login (kein Passwort in der .env) gibt es nichts zum Abmelden
+if (me && !me.loginEnabled) $('logout').hidden = true;
 
 // Ladebildschirm ausblenden, sobald alles steht (mindestens so lange, bis das Logo aufgebaut ist)
 setTimeout(() => $('intro').classList.add('done'), Math.max(0, 1300 - performance.now()));
