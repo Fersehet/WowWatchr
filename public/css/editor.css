@@ -58,7 +58,7 @@ header {
 .head-btn { font: 600 13px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; color: var(--text); }
 .head-btn:hover { border-color: var(--muted); }
 /* Breit genug für jede Sprache, damit die Sprachauswahl nicht springt */
-#logout { min-width: 152px; text-align: center; }
+@media (min-width: 901px) { #logout { min-width: 152px; text-align: center; } }
 .lang { appearance: none; -webkit-appearance: none; font: 600 13px/1 var(--f-display); letter-spacing: .06em; color: var(--text); background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa5ba' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 10px center; border: 1px solid var(--border); border-radius: 999px; padding: 9px 28px 9px 12px; transition: border-color .2s; cursor: pointer; }
 .lang:hover, .lang:focus-visible { border-color: var(--accent); }
 .lang option { background: var(--panel); color: var(--text); }
@@ -124,6 +124,8 @@ button[type='submit']:hover { filter: brightness(1.06); }
 .link { margin-bottom: 10px; font-size: 13px; color: var(--muted); }
 .link > span { display: block; margin-bottom: 4px; }
 .link input { font: 500 12px/1.2 var(--f-mono); }
+/* Feste Breite, passt auch für „Скопировано!“ */
+.link button { flex: none; width: 132px; text-align: center; }
 
 /* Hintergrund wie bei FaceitWatchr: feines Raster und ein Hauch Akzentfarbe */
 .preview-area { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; overflow: hidden;
@@ -161,7 +163,9 @@ button[type='submit']:hover { filter: brightness(1.06); }
 }
 /* Wenig Platz: Status nur als Punkt */
 @media (max-width: 1180px) { .status { font-size: 0; gap: 0; padding: 7px; } }
-@media (max-width: 520px) { .status { display: none; } .tabs { gap: 14px; overflow-x: auto; scrollbar-width: none; } }
+@media (max-width: 520px) { .status { display: none; } .tabs { display: flex; justify-content: flex-start; gap: 14px; overflow-x: auto; scrollbar-width: none; } .tabs button { flex: none; } }
+/* Sehr schmal: nur das Zeichen, damit die Sprachauswahl Platz hat */
+@media (max-width: 440px) { .brand-word { display: none; } }
 @media (max-width: 480px) { .head-btn { padding: 9px 10px; } }
 
 /* Ladebildschirm wie bei FaceitWatchr: Logo baut sich auf, der Timer tickt (kein Pulsieren), danach verschwimmt er in die Seite */
