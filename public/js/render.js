@@ -82,15 +82,15 @@ const LAYOUTS = {
         <div class="stack" style="gap:2px"><div class="lbl">${v.season}</div><div class="title">${v.t.raid}</div></div>
         <div class="stack end" style="gap:2px"><div class="lbl">${v.t.progress}</div><div class="title accent">${v.top}</div></div>
       </div>
-      <div class="stack bottom" style="gap:14px">${each(v.raids, (r) => `
+      <div class="stack bottom" style="gap:16px">${each(v.raids, (r) => `
         <div>
-          <div class="row" style="margin-bottom:6px">
-            <span class="grow" style="font-size:15px;font-weight:600">${r.name}</span>
+          <div class="row" style="margin-bottom:7px">
+            <span class="grow" style="font-size:16px;font-weight:600">${r.name}</span>
             <span class="lbl">${v.t.kills}</span><span style="font-size:14px;font-weight:700;min-width:22px;text-align:right">${r.kills}</span>
             ${r.parse == null ? '' : `<span class="lbl" style="margin-left:8px">${v.t.parse}</span><span style="font-size:14px;font-weight:700;min-width:22px;text-align:right">${r.parse}</span>`}
-            <span class="accent" style="font-size:15px;font-weight:700;margin-left:8px;min-width:30px;text-align:right">${r.prog}</span>
+            <span class="accent" style="font-size:16px;font-weight:700;margin-left:8px;min-width:30px;text-align:right">${r.prog}</span>
           </div>
-          <div class="track"><div class="fill" style="width:${r.pct}%"></div></div>
+          <div class="rp">${r.pips || '<i></i>'}</div>
         </div>`)}
       </div>`,
   },
