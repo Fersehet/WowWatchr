@@ -26,7 +26,11 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 .time { font-size: 14px; color: #d3d7df; }
 
 /* A: Klassik */
-.a { width: 640px; height: 270px; padding: 20px 24px; border-radius: 18px; background: rgba(38,40,46,.96); display: flex; flex-direction: column; }
+.a { position: relative; overflow: hidden; width: 640px; height: 270px; padding: 20px 24px; border-radius: 18px; background: rgba(20,22,28,.94); border: 1px solid rgba(255,255,255,.12); display: flex; flex-direction: column; }
+/* Etwas Leben: ein Schimmer der Akzentfarbe oben rechts und eine kurze Linie oben, wie der Rand der Seitenleiste */
+.a::before { content: ''; position: absolute; inset: 0; background: var(--accent); opacity: .14; -webkit-mask-image: radial-gradient(380px 220px at 100% 0%, #000, transparent 70%); mask-image: radial-gradient(380px 220px at 100% 0%, #000, transparent 70%); pointer-events: none; }
+.a::after { content: ''; position: absolute; top: 0; left: 24px; width: 64px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+.a > * { position: relative; }
 .a .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: auto; }
 .a .bottom { margin-top: auto; }
 
@@ -39,6 +43,10 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 .c .result.up { color: #46d3b0; }
 .c .result.down { color: #ff8080; }
 .c .result { font-size: 13px; font-weight: 700; }
+/* Dungeon-Zeit, leise: grün in der Zeit, rot darüber */
+.c .rtime { font-size: 12px; font-weight: 500; }
+.c .rtime.up { color: rgba(70,211,176,.8); }
+.c .rtime.down { color: rgba(255,128,128,.8); }
 .pips { display: flex; gap: 3px; }
 .pips i { display: block; height: 8px; flex: 1 1 0; border-radius: 2px; background: rgba(255,255,255,.16); }
 .pips i.on { background: var(--accent); }

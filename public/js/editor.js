@@ -128,10 +128,16 @@ function drawPreview() {
   const src = previewPage ? `/overlay/${previewPage}` : '/overlay';
   if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
   const stage = $('stage');
-  const { paddingLeft, paddingRight } = getComputedStyle(stage.parentElement);
-  const available = stage.parentElement.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight);
+  const area = stage.parentElement;
+  const { paddingLeft, paddingRight, paddingTop, paddingBottom } = getComputedStyle(area);
+  const available = area.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight);
   const margin = 16; // damit das Schachbrett rund um das Overlay sichtbar bleibt
-  const scale = Math.min(1, (available - 2 * margin) / w);
+  let scale = Math.min(1, (available - 2 * margin) / w);
+  // Neben der Seitenleiste hat die Vorschau eine feste Höhe: hohe Layouts (Seitenleiste) ganz zeigen, Platz für den Hinweis lassen
+  if (matchMedia('(min-width: 901px)').matches) {
+    const availableHeight = area.clientHeight - parseFloat(paddingTop) - parseFloat(paddingBottom) - 40;
+    scale = Math.min(scale, (availableHeight - 2 * margin) / h);
+  }
   frame.style.width = `${w}px`;
   frame.style.height = `${h}px`;
   frame.style.transform = `translate(${margin}px, ${margin}px) scale(${scale})`;
