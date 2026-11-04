@@ -41,7 +41,7 @@
       <p class="msg" id="msg" role="alert"></p>
     </form>
     <script type="module">
-      import { LANGS, LANG_NAMES, TEXTS } from '/js/i18n.js';
+      import { LANGS, TEXTS } from '/js/i18n.js';
 
       const $ = (id) => document.getElementById(id);
       const params = new URLSearchParams(location.search);
@@ -61,7 +61,7 @@
         draw();
       };
 
-      $('langSel').innerHTML = LANGS.map((id) => `<option value="${id}">${LANG_NAMES[id]}</option>`).join('');
+      $('langSel').innerHTML = LANGS.map((id) => `<option value="${id}">${id.toUpperCase()}</option>`).join('');
       $('langSel').value = lang;
       $('langSel').addEventListener('change', (e) => {
         lang = e.target.value;

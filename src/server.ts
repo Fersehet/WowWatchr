@@ -4,7 +4,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Auth, type LoginError } from './auth.ts';
 import { demoState } from './demo.ts';
-import { loadSettings, sanitize, saveSettings } from './settings.ts';
+import { Blizzard, Live } from './live.ts';
+import { DEFAULTS, loadSettings, sanitize, saveSettings } from './settings.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 if (existsSync(join(ROOT, '.env'))) process.loadEnvFile(join(ROOT, '.env'));
@@ -21,6 +22,14 @@ const auth = new Auth(join(DATA, 'session-secret'), process.env.SESSION_SECRET?.
   name: process.env.ADMIN_USER?.trim() || 'admin',
   password: process.env.ADMIN_PASSWORD || '',
 });
+
+const notify = () => {
+  for (const listener of listeners) listener.write('event: settings\ndata: {}\n\n');
+};
+// Echte Daten nur mit Blizzard-Schlüssel, sonst Beispieldaten
+const blizzard = new Blizzard(process.env.BLIZZARD_CLIENT_ID?.trim() || '', process.env.BLIZZARD_CLIENT_SECRET?.trim() || '');
+const live = new Live(blizzard, notify);
+const wantsLive = () => blizzard.enabled && Boolean(settings.name.trim());
 
 const app = express();
 // Hinter einem Reverse Proxy: echte Besucher-IP (für die Login-Sperre) und https-Erkennung (für sichere Cookies)
@@ -95,11 +104,21 @@ app.get('/api/settings', (_req, res) => void res.json(settings));
 app.put('/api/settings', (req, res) => {
   settings = sanitize(req.body);
   saveSettings(SETTINGS_FILE, settings);
-  for (const listener of listeners) listener.write('event: settings\ndata: {}\n\n');
+  notify();
   res.json(settings);
 });
 
-app.get('/api/state', (_req, res) => void res.json(demoState(settings)));
+// Auch ohne offenen Editor alle paar Minuten neu holen; Live fragt höchstens alle fünf Minuten an
+setInterval(() => wantsLive() && live.refresh(settings), 60_000);
+
+// Echte Daten, sobald ein Charakter gefunden ist, sonst Beispieldaten
+app.get('/api/state', (_req, res) => {
+  if (!wantsLive()) return void res.json({ ...demoState(settings), status: blizzard.enabled ? 'demo' : 'noKey' });
+  live.refresh(settings);
+  if (live.state) return void res.json({ ...live.state, status: live.status });
+  // Noch keine echten Daten: Beispieldaten nicht unter dem echten Namen zeigen
+  res.json({ ...demoState({ ...settings, name: DEFAULTS.name, realm: DEFAULTS.realm }), status: live.status });
+});
 
 // Änderungen im Editor erscheinen sofort in OBS
 app.get('/api/events', (req, res) => {
@@ -111,5 +130,6 @@ app.get('/api/events', (req, res) => {
 
 app.listen(PORT, HOST, () => {
   console.log(`WowWatchr: http://localhost:${PORT}`);
+  if (!blizzard.enabled) console.log('Hinweis: BLIZZARD_CLIENT_ID/BLIZZARD_CLIENT_SECRET fehlen in der .env, das Overlay zeigt Beispieldaten.');
   if (!auth.enabled) console.log('Hinweis: ADMIN_PASSWORD fehlt in der .env, ohne Passwort kann sich niemand im Editor anmelden.');
 });

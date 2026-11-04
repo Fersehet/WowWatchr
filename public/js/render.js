@@ -6,7 +6,9 @@ export const PAGES = ['character', 'mplus', 'raid'];
 
 const esc = (value) => String(value).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const MARK = (size) => `<img src="/logo.svg" alt="" width="${size}" height="${size}">`;
-const AVATAR = (size, label) => `<svg class="avatar" width="${size}" height="${size}" viewBox="0 0 72 72" role="img" aria-label="${esc(label)}"><circle cx="36" cy="28" r="12" fill="#8b909c"/><path d="M12 66c2-16 12-23 24-23s22 7 24 23z" fill="#8b909c"/></svg>`;
+const AVATAR = (size, label, url) => url
+  ? `<img class="avatar" src="${esc(url)}" alt="" width="${size}" height="${size}">`
+  : `<svg class="avatar" width="${size}" height="${size}" viewBox="0 0 72 72" role="img" aria-label="${esc(label)}"><circle cx="36" cy="28" r="12" fill="#8b909c"/><path d="M12 66c2-16 12-23 24-23s22 7 24 23z" fill="#8b909c"/></svg>`;
 
 /** Bereitet die Werte einmal auf, damit jedes Layout nur noch Markup enthält. */
 function view(state, lang) {
@@ -16,12 +18,13 @@ function view(state, lang) {
   const top = [...r.difficulties].reverse().find((d) => d.killed > 0);
   return {
     t,
-    c: { name: esc(c.name), realm: esc(c.realm), guild: esc(c.guild), spec: esc(c.spec), ilvl: c.ilvl },
+    c: { name: esc(c.name), realm: esc(c.realm), guild: esc(c.guild), spec: esc(c.spec), ilvl: c.ilvl, avatar: c.avatar },
     score: m.score.toLocaleString(lang).replace(/\s/g, ' '),
     scorePct: m.scorePct,
     best: `+${m.bestKey}`,
     timed: `${m.timed}/${m.total}`,
-    stats: Object.keys(t.stat).map((id) => ({ label: t.stat[id], value: pct(state.stats[id]) })),
+    // Fehlt die Statistik bei Blizzard, bleibt die Werte-Zeile leer
+    stats: state.stats ? Object.keys(t.stat).map((id) => ({ label: t.stat[id], value: pct(state.stats[id]) })) : [],
     runs: m.runs.map((run) => ({
       key: `+${run.key}`,
       name: esc(run.name),
@@ -29,13 +32,13 @@ function view(state, lang) {
       result: run.result > 0 ? `+${run.result}` : `−${Math.abs(run.result)}`,
       cls: run.result > 0 ? 'up' : 'down',
     })),
-    season: `${t.season} ${r.season}`,
+    season: r.name ? esc(r.name) : r.season ? `${t.season} ${r.season}` : '',
     top: top ? `${top.killed}/${r.bosses} ${t.diffShort[top.id]}` : `0/${r.bosses}`,
     raids: r.difficulties.map((d) => ({
       id: d.id,
       name: t.diff[d.id],
       prog: `${d.killed}/${r.bosses}`,
-      pct: Math.round((d.killed / r.bosses) * 100),
+      pct: r.bosses ? Math.round((d.killed / r.bosses) * 100) : 0,
       kills: d.kills,
       parse: d.parse,
       pips: Array.from({ length: r.bosses }, (_, n) => `<i class="${n < d.killed ? 'on' : ''}"></i>`).join(''),
@@ -49,7 +52,7 @@ const LAYOUTS = {
   a: {
     character: (v) => `
       <div class="row" style="gap:16px">
-        ${AVATAR(72, v.t.portrait)}
+        ${AVATAR(72, v.t.portrait, v.c.avatar)}
         <div class="grow">
           <div style="font-size:30px;font-weight:700;line-height:1.1">${v.c.name}</div>
           <div style="font-size:14px;color:#d3d7df;margin-top:4px">${v.c.spec} · ${v.c.realm}</div>
@@ -84,7 +87,7 @@ const LAYOUTS = {
           <div class="row" style="margin-bottom:6px">
             <span class="grow" style="font-size:15px;font-weight:600">${r.name}</span>
             <span class="lbl">${v.t.kills}</span><span style="font-size:14px;font-weight:700;min-width:22px;text-align:right">${r.kills}</span>
-            <span class="lbl" style="margin-left:8px">${v.t.parse}</span><span style="font-size:14px;font-weight:700;min-width:22px;text-align:right">${r.parse}</span>
+            ${r.parse == null ? '' : `<span class="lbl" style="margin-left:8px">${v.t.parse}</span><span style="font-size:14px;font-weight:700;min-width:22px;text-align:right">${r.parse}</span>`}
             <span class="accent" style="font-size:15px;font-weight:700;margin-left:8px;min-width:30px;text-align:right">${r.prog}</span>
           </div>
           <div class="track"><div class="fill" style="width:${r.pct}%"></div></div>
@@ -124,7 +127,7 @@ const LAYOUTS = {
     character: (v) => `
       <div class="head">${MARK(28)}<span class="grow">${v.t.character}</span></div>
       <div class="stack hero">
-        ${AVATAR(96, v.t.portrait)}
+        ${AVATAR(96, v.t.portrait, v.c.avatar)}
         <div style="font-size:26px;font-weight:700;margin-top:12px;line-height:1.1">${v.c.name}</div>
         <div style="font-size:14px;color:#d3d7df;margin-top:4px">${v.c.spec}</div>
         <div style="font-size:13px;color:#b1b7c3;margin-top:2px">${v.c.guild} · ${v.c.realm}</div>
@@ -139,7 +142,7 @@ const LAYOUTS = {
       <div class="line"><span class="lbl">${v.t.timed}</span><span class="num">${v.timed}</span></div>
       ${each(v.runs, (r) => `
         <div class="line">
-          <div class="stack grow" style="gap:2px"><span style="font-size:14px;font-weight:500">${r.name}</span><span class="lbl">${r.time}</span></div>
+          <div class="stack grow" style="gap:2px"><span style="font-size:14px;font-weight:400">${r.name}</span><span class="lbl">${r.time}</span></div>
           <span class="num">${r.key}</span>
           <span class="chip ${r.cls}">${r.result}</span>
         </div>`)}`,
@@ -149,7 +152,7 @@ const LAYOUTS = {
         <div class="stack grow diff q-${r.id}">
           <div class="row between"><span class="dname">${r.name}</span><span style="font-size:36px;font-weight:700;line-height:1">${r.prog}</span></div>
           <div class="track"><div class="fill" style="width:${r.pct}%"></div></div>
-          <div class="row between"><span class="lbl">${v.t.kills} <b>${r.kills}</b></span><span class="lbl">${v.t.parse} <b>${r.parse}</b></span></div>
+          <div class="row between"><span class="lbl">${v.t.kills} <b>${r.kills}</b></span>${r.parse == null ? '' : `<span class="lbl">${v.t.parse} <b>${r.parse}</b></span>`}</div>
         </div>`)}`,
   },
 };
