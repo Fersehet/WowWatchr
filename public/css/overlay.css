@@ -33,6 +33,10 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 .a > * { position: relative; }
 .a .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: auto; }
 .a .bottom { margin-top: auto; }
+/* Raid: ein Segment pro Boss, wie die Punkte in der Leiste */
+.a .rp { display: flex; gap: 4px; }
+.a .rp i { display: block; flex: 1 1 0; height: 12px; border-radius: 3px; background: rgba(255,255,255,.12); }
+.a .rp i.on { background: var(--accent); }
 
 /* C: Leiste */
 .c { width: 1060px; height: 84px; padding: 0 28px 0 18px; border-radius: 42px; background: rgba(18,20,26,.74); border: 1px solid rgba(255,255,255,.2); display: flex; align-items: center; gap: 18px; }

@@ -112,7 +112,7 @@ function drawControls() {
     const button = document.createElement('button');
     button.type = 'button';
     button.setAttribute('aria-pressed', page === previewPage);
-    button.textContent = page ? t[page] : t.auto;
+    button.append(Object.assign(document.createElement('span'), { textContent: page ? t[page] : t.auto }));
     button.addEventListener('click', () => {
       previewPage = page;
       drawControls();
