@@ -44,7 +44,7 @@ header {
 .head-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
 
 .brand { display: flex; align-items: center; gap: 9px; }
-.brand-word { display: block; width: 104px; height: 18px; }
+.brand-word { display: block; width: 118px; height: 18px; }
 .brand-mark { flex: none; width: 30px; height: 30px; transition: transform .35s cubic-bezier(.2, .8, .3, 1), filter .35s; }
 .brand:hover .brand-mark { transform: scale(1.18); filter: drop-shadow(0 0 6px var(--glow)); }
 @media (prefers-reduced-motion: reduce) { .brand-mark { transition: none; } }
@@ -165,18 +165,18 @@ button[type='submit']:hover { filter: brightness(1.06); }
 .intro-inner { display: grid; justify-items: center; gap: 18px; transition: transform .6s cubic-bezier(.5, 0, .2, 1); }
 .intro.done .intro-inner { transform: scale(1.35); }
 .intro-logo { overflow: visible; filter: drop-shadow(0 0 18px var(--glow)); }
+/* Wie logo-animated.svg: Ring baut sich auf, das Schwert fällt ein, dann tickt der Timer */
 .i-track { opacity: 0; animation: intro-fade .4s ease .1s forwards; }
-.i-timer { stroke-dasharray: 70 100; stroke-dashoffset: 70; animation: intro-draw .7s cubic-bezier(.6, 0, .2, 1) .1s forwards, intro-tick 5s step-end 1.4s infinite; }
-.i-line { stroke-dasharray: 100; stroke-dashoffset: 100; animation: intro-draw .45s ease-out .55s forwards; }
-.i-fill { opacity: 0; animation: intro-fade .3s ease .95s forwards; }
-.intro-word { display: block; width: 161px; height: 28px; opacity: 0; animation: intro-rise .5s ease .75s forwards; }
+.i-arc { stroke-dasharray: 0 100; animation: intro-fill .8s cubic-bezier(.6, 0, .2, 1) .2s forwards, intro-tick 5s steps(1, end) 1.4s infinite; }
+.i-sword { opacity: 0; transform: translateY(-8px); animation: intro-drop .4s cubic-bezier(.3, 1.4, .5, 1) .6s forwards; }
+.intro-word { display: block; width: 184px; height: 28px; opacity: 0; animation: intro-rise .5s ease .75s forwards; }
 .intro-bar { width: 160px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; opacity: 0; animation: intro-fade .3s ease .8s forwards; }
 .intro-bar i { display: block; height: 100%; width: 100%; background: var(--accent); box-shadow: 0 0 10px var(--glow); transform-origin: left; transform: scaleX(var(--p, .1)); transition: transform .35s ease; }
-@keyframes intro-draw { to { stroke-dashoffset: 0; } }
+@keyframes intro-fill { to { stroke-dasharray: 70 100; } }
+@keyframes intro-drop { to { opacity: 1; transform: none; } }
 @keyframes intro-fade { to { opacity: 1; } }
 @keyframes intro-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes intro-tick { 0% { stroke-dasharray: 70 100; } 20% { stroke-dasharray: 65 100; } 40% { stroke-dasharray: 60 100; } 60% { stroke-dasharray: 55 100; } 80% { stroke-dasharray: 50 100; } 100% { stroke-dasharray: 70 100; } }
 @media (prefers-reduced-motion: reduce) {
-  .i-timer, .i-line { animation: none; stroke-dashoffset: 0; }
-  .i-track, .i-fill, .intro-word, .intro-bar { animation: none; opacity: 1; transform: none; }
+  .i-track, .i-arc, .i-sword, .intro-word, .intro-bar { animation: none; opacity: 1; transform: none; stroke-dasharray: 70 100; }
 }
