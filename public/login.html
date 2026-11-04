@@ -81,8 +81,8 @@
       };
 
       const me = await fetch('/api/me').then((r) => r.json()).catch(() => null);
-      if (me?.user) go();
-      else if (me && !me.loginEnabled) show('loginDisabled', true);
+      // Ohne Passwort in der .env gibt es keinen Login: direkt in den Editor
+      if (me?.user || (me && !me.loginEnabled)) go();
 
       const ERRORS = { 429: 'loginLocked', 503: 'loginDisabled' };
       $('loginForm').addEventListener('submit', async (e) => {
