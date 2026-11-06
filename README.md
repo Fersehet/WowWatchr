@@ -14,7 +14,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 - Three pages: **Character** (item level, Mythic+ rating, secondary stats), **Mythic+** (rating, best timed key, dungeons timed this season, best runs) and **Raid** (progress and kills for Normal, Heroic and Mythic in the current raid)
 - Three layouts: a **Classic** card, a slim **Bar** and a tall **Sidebar**
 - One OBS URL that switches through the pages on its own, or one URL per page
-- An editor in your browser with a live preview, protected by a login, and every change shows up in OBS right away
+- An editor in your browser with a live preview, protected by a login if you set a password, and every change shows up in OBS right away
 - Real character data from the official Blizzard API, with your own free key
 - Editor and overlay in English, German, Russian and French
 
@@ -53,11 +53,13 @@ npm install
 cp .env.example .env   # Windows: copy .env.example .env
 ```
 
-Put at least this into `.env`:
+Set a password for the editor in `.env`:
 
 ```env
 ADMIN_PASSWORD=a-long-password
 ```
+
+If you leave `ADMIN_PASSWORD` empty, there is no sign-in and the editor opens right away. Only do that if nobody else can reach the server, because then anyone who can open the editor can change your overlay.
 
 Then start it:
 
@@ -65,7 +67,7 @@ Then start it:
 npm start
 ```
 
-Open **http://localhost:3312** in your browser and sign in with user `admin` and your password. Enter your character name and realm in the editor and pick a layout.
+Open **http://localhost:3312** in your browser and sign in with user `admin` and your password (or go straight in, if you left the password empty). Enter your character name and realm in the editor and pick a layout.
 
 ## Real data
 
@@ -92,11 +94,11 @@ The keys stay on your server; OBS and the overlay never see them. WowWatchr refr
 2. In OBS choose **Add source → Browser** and paste the URL.
 3. Enter the width and height shown in the editor for your layout.
 
-`/overlay` switches through the enabled pages on its own. `/overlay/character`, `/overlay/mplus` and `/overlay/raid` always show one page, if you would rather switch them yourself. If the server runs on another machine, use its IP instead of `localhost`. The overlay can be read without signing in, the editor cannot.
+`/overlay` switches through the enabled pages on its own. `/overlay/character`, `/overlay/mplus` and `/overlay/raid` always show one page, if you would rather switch them yourself. If the server runs on another machine, use its IP instead of `localhost`. The overlay can be read without signing in. The editor needs the sign-in, unless `ADMIN_PASSWORD` is empty.
 
 ## Troubleshooting
 
-- **The sign-in page says login is not set up:** put `ADMIN_PASSWORD` into `.env` and restart the server. On Windows, make sure the file is called `.env` and not `.env.txt`.
+- **The editor opens without asking for a password:** `ADMIN_PASSWORD` in `.env` is empty. Set one and restart the server. On Windows, make sure the file is called `.env` and not `.env.txt`.
 - **"Too many attempts":** after 10 wrong passwords the login is locked for up to 15 minutes.
 - **The overlay shows Vaelric from Blackrock and not my character:** that is the sample data. Check the status at the top of the editor and the three entries below.
 - **"No Blizzard key":** put `BLIZZARD_CLIENT_ID` and `BLIZZARD_CLIENT_SECRET` into `.env` and restart the server.

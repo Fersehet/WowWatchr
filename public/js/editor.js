@@ -8,7 +8,6 @@ const LAYOUT_NAMES = { a: 'layoutA', c: 'layoutC', d: 'layoutD' };
 // Sitzung abgelaufen: zurück zum Login
 const toLogin = () => (location.href = `/login.html?next=${encodeURIComponent(location.pathname + location.search)}`);
 
-$('intro').querySelector('.intro-bar i').style.setProperty('--p', 0.6);
 let settings = await fetch('/api/settings').then((r) => r.json());
 let previewPage = ''; // leer = automatischer Wechsel
 let uiLang = [new URLSearchParams(location.search).get('lang'), localStorage.getItem('lang'), navigator.language.slice(0, 2)].find((l) => LANGS.includes(l)) || 'en';
@@ -112,7 +111,7 @@ function drawControls() {
     const button = document.createElement('button');
     button.type = 'button';
     button.setAttribute('aria-pressed', page === previewPage);
-    button.textContent = page ? t[page] : t.auto;
+    button.append(Object.assign(document.createElement('span'), { textContent: page ? t[page] : t.auto }));
     button.addEventListener('click', () => {
       previewPage = page;
       drawControls();
@@ -168,7 +167,8 @@ loadStatus();
 new EventSource('/api/events').addEventListener('settings', loadStatus);
 const me = await fetch('/api/me').then((r) => r.json()).catch(() => null);
 if (me?.user) $('accountName').textContent = me.user;
+// Ohne Login (kein Passwort in der .env) gibt es nichts zum Abmelden
+if (me && !me.loginEnabled) $('logout').hidden = true;
 
 // Ladebildschirm ausblenden, sobald alles steht (mindestens so lange, bis das Logo aufgebaut ist)
-$('intro').querySelector('.intro-bar i').style.setProperty('--p', 1);
 setTimeout(() => $('intro').classList.add('done'), Math.max(0, 1300 - performance.now()));
