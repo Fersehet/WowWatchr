@@ -200,7 +200,7 @@ button[type='submit']:hover { filter: brightness(1.06); }
   .i-track, .i-arc, .i-sword, .intro-word, .intro-bar, .intro-bar i { animation: none; opacity: 1; transform: none; stroke-dasharray: 70 100; }
 }
 
-/* Ansichten-Leiste rechts wie bei FaceitWatchr; ersetzt auf breiten Bildschirmen die Tabs in der Kopfzeile */
+/* Ansichten-Leiste rechts wie bei FaceitWatchr, die Tabs in der Kopfzeile bleiben zusätzlich sichtbar */
 .rail { position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); top: 50%; z-index: 15; display: none; gap: 22px; transform: translate(0, -50%); }
 .rail-track { position: absolute; right: 5px; top: 9px; bottom: 9px; width: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .rail-track i { position: absolute; inset: 0; background: var(--accent); box-shadow: 0 0 8px var(--glow); transform-origin: top; transform: scaleY(var(--fill, 0)); transition: transform .5s cubic-bezier(.5, 0, .2, 1); }
@@ -215,7 +215,6 @@ button[type='submit']:hover { filter: brightness(1.06); }
 .rail a.active span { color: var(--text); }
 @media (min-width: 1100px) {
   .rail { display: grid; }
-  .tabs { visibility: hidden; }
   /* Platz für die Leiste lassen, damit sie nichts verdeckt */
   .preview-area { padding-right: 180px; }
   .page-picker { left: calc(50% - 90px); }
