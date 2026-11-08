@@ -39,15 +39,23 @@ const API: Record<string, unknown> = {
   },
 };
 
+// WoW Forever: keine Realms, Name-Nachname, eigener Namespace, keine Spezialisierung
+const FOREVER: Record<string, unknown> = {
+  '/profile/wow/character/vaelric-sturmbraue': {
+    name: 'Vaelric', surname: 'Sturmbraue', ruleset: { name: names('PvP', 'PvP') }, equipped_item_level: 62, character_class: { name: names('Mage', 'Magier') },
+  },
+};
+
 function fakeFetch(options: { token?: number; down?: boolean } = {}) {
   const calls: string[] = [];
   const fn = (async (input: string | URL) => {
     const url = new URL(String(input));
-    calls.push(url.pathname);
+    calls.push(url.pathname + url.search);
     const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
     if (url.host === 'oauth.battle.net') return options.token ? json(options.token, {}) : json(200, { access_token: 't', expires_in: 86400 });
     if (options.down) return json(503, {});
-    return url.pathname in API ? json(200, API[url.pathname]) : json(404, {});
+    const api = url.searchParams.get('namespace')?.includes('-forever-') ? FOREVER : API;
+    return url.pathname in api ? json(200, api[url.pathname]) : json(404, {});
   }) as typeof fetch;
   return { fn, calls };
 }
@@ -126,7 +134,19 @@ test('Live fragt nicht bei jedem Aufruf neu an und behält Daten bei Ausfall', a
   assert.equal(live.status, 'loading');
 });
 
+test('WoW Forever: Name-Nachname im Forever-Namespace', async () => {
+  const { fn, calls } = fakeFetch();
+  const state = await fetchLive({ ...settings, game: 'forever', realm: 'Sturmbraue' }, new Blizzard('id', 'secret', fn));
+  assert.ok(state);
+  assert.deepEqual([state.character.name, state.character.realm, state.character.spec, state.character.ilvl], ['Vaelric Sturmbraue', 'PvP', 'Magier', 62]);
+  assert.equal(state.stats, null);
+  assert.ok(!calls.some((c) => c.startsWith('/data/wow/realm/index')), 'Forever hat keinen Realm-Index');
+  assert.ok(calls.filter((c) => c.includes('namespace=')).every((c) => c.includes('-forever-eu')), 'alle Abfragen im Forever-Namespace');
+});
+
 test('Region fällt auf EU zurück', () => {
   assert.equal(sanitize({ region: 'cn' }).region, DEFAULTS.region);
   assert.equal(sanitize({ region: 'us' }).region, 'us');
+  assert.equal(sanitize({ game: 'classic' }).game, 'retail');
+  assert.equal(sanitize({ game: 'forever' }).game, 'forever');
 });

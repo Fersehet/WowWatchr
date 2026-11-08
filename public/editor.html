@@ -37,9 +37,12 @@
           <h2 data-i18n="character"></h2>
           <div class="grid">
             <label><span data-i18n="name"></span><input id="name" maxlength="40" /></label>
-            <label><span data-i18n="realm"></span><input id="realm" maxlength="40" /></label>
+            <label><span id="realmLabel"></span><input id="realm" maxlength="40" /></label>
           </div>
-          <label class="field"><span data-i18n="region"></span><select id="region"></select></label>
+          <div class="grid">
+            <label><span data-i18n="game"></span><select id="game"><option value="retail">Retail</option><option value="forever">Forever</option></select></label>
+            <label><span data-i18n="region"></span><select id="region"></select></label>
+          </div>
         </section>
         <section>
           <h2 data-i18n="layout"></h2>

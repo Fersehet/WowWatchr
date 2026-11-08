@@ -58,15 +58,15 @@ export class Blizzard {
   }
 
   /** Ohne locale liefert Blizzard jeden Namen in allen Sprachen. */
-  async get(region: Region, path: string, namespace: 'profile' | 'dynamic') {
+  async get(region: Region, path: string, namespace: string) {
     const url = `https://${region}.api.blizzard.com${path}?namespace=${namespace}-${region}`;
     return getJson(this.fetchFn, url, { headers: { Authorization: `Bearer ${await this.auth()}` } });
   }
 
   /** Für Daten, die sich nur mit Patches ändern (Realms, Dungeons). */
-  async cached(region: Region, path: string) {
-    const key = region + path;
-    if (!this.cache.has(key)) this.cache.set(key, await this.get(region, path, 'dynamic'));
+  async cached(region: Region, path: string, namespace = 'dynamic') {
+    const key = `${namespace}-${region}${path}`;
+    if (!this.cache.has(key)) this.cache.set(key, await this.get(region, path, namespace));
     return this.cache.get(key) ?? null;
   }
 }
@@ -76,21 +76,30 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   const locale = LOCALES[lang];
   const tr = (names: Json | string | undefined) => (typeof names === 'string' ? names : names?.[locale] ?? names?.en_US ?? '');
 
-  // Realm in jeder Sprache (z. B. „Гордунни“) oder als Slug
-  const realms = await blizzard.cached(region, '/data/wow/realm/index');
+  // WoW Forever: eigene Namespaces (profile-forever-eu …), keine Realms, Charakter = Name-Nachname.
+  // Blizzard hat das noch nicht dokumentiert, Stand Nov. 2026 von Spielern ausprobiert.
+  const forever = settings.game === 'forever';
+  const ns = (kind: string) => (forever ? `${kind}-forever` : kind);
+  const name = settings.name.trim().toLowerCase();
   const wanted = settings.realm.trim().toLowerCase();
-  const realm = realms?.realms?.find((r: Json) => r.slug === slug(wanted) || Object.values(r.name ?? {}).some((n) => String(n).toLowerCase() === wanted))?.slug ?? slug(wanted);
-
-  const path = `/profile/wow/character/${realm}/${encodeURIComponent(settings.name.trim().toLowerCase())}`;
-  const profile = await blizzard.get(region, path, 'profile');
+  let path: string;
+  if (forever) {
+    path = `/profile/wow/character/${encodeURIComponent(`${name}-${slug(wanted)}`)}`;
+  } else {
+    // Realm in jeder Sprache (z. B. „Гордунни“) oder als Slug
+    const realms = await blizzard.cached(region, '/data/wow/realm/index');
+    const realm = realms?.realms?.find((r: Json) => r.slug === slug(wanted) || Object.values(r.name ?? {}).some((n) => String(n).toLowerCase() === wanted))?.slug ?? slug(wanted);
+    path = `/profile/wow/character/${realm}/${encodeURIComponent(name)}`;
+  }
+  const profile = await blizzard.get(region, path, ns('profile'));
   if (!profile) return null;
 
-  const seasons = await blizzard.get(region, '/data/wow/mythic-keystone/season/index', 'dynamic');
+  const seasons = await blizzard.get(region, '/data/wow/mythic-keystone/season/index', ns('dynamic'));
   const [stats, media, raids, season] = await Promise.all([
-    blizzard.get(region, `${path}/statistics`, 'profile'),
-    blizzard.get(region, `${path}/character-media`, 'profile'),
-    blizzard.get(region, `${path}/encounters/raids`, 'profile'),
-    seasons?.current_season ? blizzard.get(region, `${path}/mythic-keystone-profile/season/${seasons.current_season.id}`, 'profile') : null,
+    blizzard.get(region, `${path}/statistics`, ns('profile')),
+    blizzard.get(region, `${path}/character-media`, ns('profile')),
+    blizzard.get(region, `${path}/encounters/raids`, ns('profile')),
+    seasons?.current_season ? blizzard.get(region, `${path}/mythic-keystone-profile/season/${seasons.current_season.id}`, ns('profile')) : null,
   ]);
 
   // Pro Dungeon der beste Run der Saison, neueste zuerst
@@ -99,7 +108,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   // Stufen (+1 bis +3) stehen nur in den Dungeon-Daten: Zeitgrenzen pro Stufe
   const upgrades = async (run: Json) => {
     if (!run.is_completed_within_time) return -1;
-    const dungeon = await blizzard.cached(region, `/data/wow/mythic-keystone/dungeon/${run.dungeon.id}`);
+    const dungeon = await blizzard.cached(region, `/data/wow/mythic-keystone/dungeon/${run.dungeon.id}`, ns('dynamic'));
     const steps = (dungeon?.keystone_upgrades ?? []).filter((u: Json) => run.duration <= u.qualifying_duration).length;
     return Math.max(1, steps);
   };
@@ -118,10 +127,12 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   return {
     demo: false,
     character: {
-      name: profile.name,
-      realm: tr(profile.realm?.name),
+      name: profile.surname ? `${profile.name} ${tr(profile.surname)}` : profile.name,
+      // Forever: Regelwerk (z. B. PvP) statt Realm
+      realm: tr(profile.realm?.name ?? profile.ruleset?.name),
       guild: profile.guild?.name ?? '',
-      spec: spec(tr(profile.active_spec?.name), tr(profile.character_class?.name)),
+      // Forever liefert keine Spezialisierung, dann nur die Klasse
+      spec: profile.active_spec ? spec(tr(profile.active_spec.name), tr(profile.character_class?.name)) : tr(profile.character_class?.name),
       ilvl: profile.equipped_item_level ?? 0,
       avatar: media?.assets?.find((a: Json) => a.key === 'avatar')?.value ?? null,
     },
@@ -178,7 +189,7 @@ export class Live {
 
   /** Startet bei Bedarf im Hintergrund eine Abfrage; das Ergebnis kommt über onChange. */
   refresh(settings: Settings) {
-    const key = [settings.region, settings.realm, settings.name, settings.lang].map((v) => v.trim().toLowerCase()).join('/');
+    const key = [settings.game, settings.region, settings.realm, settings.name, settings.lang].map((v) => v.trim().toLowerCase()).join('/');
     if (this.running || (key === this.key && Date.now() - this.at < REFRESH_MS)) return;
     if (key !== this.key) {
       // Anderer Charakter: alte Daten nicht mehr zeigen
