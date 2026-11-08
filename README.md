@@ -17,6 +17,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 - An editor in your browser with a live preview, protected by a login if you set a password, and every change shows up in OBS right away
 - A **Statistics** page in the editor: your recent dungeons and raids, each row opens with the group, timer, affixes and the bosses killed
 - Real character data from the official Blizzard API, with your own free key, and optionally Warcraft Logs for tries, kill times and DPS, HPS, deaths, interrupts and parses per player
+- **Discord posts** through a webhook: every new best dungeon run and every boss kill, filled in with the stats of every player once the Warcraft Logs report is up
 - Editor and overlay in English, German, Russian and French
 
 ## What it looks like
@@ -112,6 +113,26 @@ With an optional Warcraft Logs key, the Statistics page also shows tries, best t
 
 4. Restart the server. WowWatchr looks for new logs of your character every ten minutes. Player stats load when you open a fight.
 
+## Discord
+
+WowWatchr can post your results in a Discord channel: one post for every new best dungeon run and one for every boss kill, right when Blizzard reports it. With Warcraft Logs, the same post is filled in later with tries, fight time, best wipe and DPS, HPS, deaths, interrupts and parse of every player. No bot is needed, a webhook is enough.
+
+1. In Discord, open the channel settings: **Edit channel → Integrations → Webhooks → New webhook**, then **Copy webhook URL**.
+2. In the editor under **Discord**, paste the link and click **Connect**. The link stays on your server and is never shown again.
+3. Pick the look and the language of the posts, then click **Send test post**.
+
+Two looks to choose from:
+
+**Table:** a Discord card with a table of the players, as plain text.
+
+<p align="center"><img src="docs/screenshots/discord-table.png" alt="Discord post for a boss kill with tries, fight time and a table of DPS, HPS, deaths, interrupts and parse per player" width="620"></p>
+
+**Tiles:** a picture in the overlay look, with big numbers, damage bars and highlights.
+
+<p align="center"><img src="docs/screenshots/discord-tiles.png" alt="Discord picture for a new best dungeon run with time, time to spare, run rating, affixes and damage bars per player" width="620"></p>
+
+Nothing old is posted when you connect: runs and kills from before count as the starting point. Blizzard only reports your best run per dungeon, so a key below your best doesn't get a post. If the server is off during a raid, the kills are posted when it is back on.
+
 ## Adding it to OBS
 
 1. In the editor under **Add to OBS**, copy a URL, e.g. `http://localhost:3312/overlay`.
@@ -130,6 +151,9 @@ With an optional Warcraft Logs key, the Statistics page also shows tries, best t
 - **"Character not found":** check the spelling of the name (accents count), the realm and the region. A character that has not logged in for a long time can be missing at Blizzard until you log in and out once.
 - **No Warcraft Logs on the Statistics page:** check `WCL_CLIENT_ID` and `WCL_CLIENT_SECRET` in `.env` and restart the server. Your character must be in a log that was uploaded to Warcraft Logs; private logs are not shown. Look for "Warcraft Logs" in the server log.
 - **The Statistics page lists only a few dungeons:** Blizzard only knows your best run per dungeon. Every new best gets saved from now on, so the list grows over time. With Warcraft Logs, every logged run shows up.
+- **"That's not a Discord webhook link":** copy the link again in Discord under **Edit channel → Integrations → Webhooks**. It starts with `https://discord.com/api/webhooks/`.
+- **"Test post failed":** the webhook may have been deleted in Discord, or the server can't reach Discord. Create a new webhook, click **Disconnect**, paste the new link and try again. Look for "Discord" in the server log.
+- **A Discord post has no player stats:** they come from Warcraft Logs and only show up once someone in your group uploaded the log. WowWatchr waits for it for 24 hours.
 - **Nothing shows up in OBS:** open the OBS URL in your browser. If it stays empty there, copy the URL again from the editor under **Add to OBS**. If the server runs on another machine, use its IP instead of `localhost`.
 - **The overlay is cut off in OBS:** set the width and height of the Browser source to the size of your layout: Classic 640 × 270, Bar 1060 × 84, Sidebar 300 × 590.
 - **The overlay doesn't switch pages:** the switching URL only rotates through pages that are ticked under **Pages**, so tick at least two. The time per page is set under **Switch every (seconds)**.

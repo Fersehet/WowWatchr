@@ -45,6 +45,9 @@ export interface Kill {
   count: number;
 }
 
+/** Neuer Kill mit dem Stand im Raid danach (für Discord) */
+export type NewKill = Kill & { killed: number; total: number };
+
 export class History {
   readonly db: DatabaseSync;
 
@@ -79,20 +82,28 @@ export class History {
     `);
   }
 
-  save(character: string, record: Snapshot) {
+  /** Speichert und gibt zurück, was neu ist. Beim allerersten Speichern ist nichts neu, das ist nur der Ausgangsstand. */
+  save(character: string, record: Snapshot): { runs: Run[]; kills: NewKill[] } {
+    const known = Boolean(this.db.prepare('SELECT 1 FROM raids WHERE character = ?').get(character));
+    const fresh: { runs: Run[]; kills: NewKill[] } = { runs: [], kills: [] };
     const run = this.db.prepare('INSERT OR IGNORE INTO runs (character, dungeon_id, at, data) VALUES (?, ?, ?, ?)');
-    for (const r of record.runs) run.run(character, r.dungeonId, r.at, JSON.stringify(r));
+    for (const r of record.runs) {
+      if (run.run(character, r.dungeonId, r.at, JSON.stringify(r)).changes && known) fresh.runs.push(r);
+    }
 
     const before = this.db.prepare('SELECT count FROM boss_counts WHERE character = ? AND boss_id = ? AND difficulty = ?');
     const count = this.db.prepare('INSERT OR REPLACE INTO boss_counts (character, boss_id, difficulty, count) VALUES (?, ?, ?, ?)');
     const kill = this.db.prepare('INSERT INTO kills (character, at, data) VALUES (?, ?, ?)');
     for (const raid of record.raids) {
+      const killedOn = (d: Difficulty) => raid.bosses.filter((b) => b.kills[d] > 0).length;
       for (const boss of raid.bosses) {
         for (const [difficulty, now] of Object.entries(boss.kills) as [Difficulty, number][]) {
           const old = before.get(character, boss.id, difficulty) as { count: number } | undefined;
           // Erste Abfrage nur als Ausgangsstand: wann frühere Kills waren, weiß Blizzard nicht
           if (old && now > old.count) {
-            kill.run(character, boss.last[difficulty], JSON.stringify({ at: boss.last[difficulty], raid: raid.name, boss: boss.name, difficulty, count: now - old.count } satisfies Kill));
+            const entry: Kill = { at: boss.last[difficulty], raid: raid.name, boss: boss.name, difficulty, count: now - old.count };
+            kill.run(character, entry.at, JSON.stringify(entry));
+            fresh.kills.push({ ...entry, killed: killedOn(difficulty), total: raid.bosses.length });
           }
           // Nie kleiner werden: eine unvollständige Antwort von Blizzard soll später keinen falschen Kill ergeben
           count.run(character, boss.id, difficulty, Math.max(now, old?.count ?? 0));
@@ -100,6 +111,7 @@ export class History {
       }
     }
     this.db.prepare('INSERT OR REPLACE INTO raids (character, data) VALUES (?, ?)').run(character, JSON.stringify(record.raids));
+    return fresh;
   }
 
   get(character: string, limit = 50) {

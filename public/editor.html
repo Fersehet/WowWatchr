@@ -76,6 +76,21 @@
           <div id="links"></div>
           <p class="hint" id="obsHint"></p>
         </section>
+        <section>
+          <h2 data-i18n="discord"></h2>
+          <div class="link" id="discordConnect">
+            <label for="discordUrl" data-i18n="discordHook"></label>
+            <div class="row"><input id="discordUrl" type="password" autocomplete="off" spellcheck="false" placeholder="https://discord.com/api/webhooks/…" /><button id="discordSave" type="button" data-i18n="discordSave"></button></div>
+          </div>
+          <p class="hint" id="discordState" role="status"></p>
+          <button id="discordRemove" type="button" class="full" data-i18n="discordRemove" hidden></button>
+          <div class="grid">
+            <label><span data-i18n="discordStyle"></span><select id="discordStyle"><option value="table" data-i18n="discordTable"></option><option value="tiles" data-i18n="discordTiles"></option></select></label>
+            <label><span data-i18n="discordLang"></span><select id="discordLang"></select></label>
+          </div>
+          <button id="discordTest" type="button" class="full" data-i18n="discordTest"></button>
+          <p class="hint" data-i18n="discordHint"></p>
+        </section>
       </aside>
       <div class="preview-area">
         <!-- Welche Seite die Vorschau zeigt -->

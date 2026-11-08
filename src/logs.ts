@@ -183,6 +183,10 @@ export class Logs {
     `);
   }
 
+  get enabled() {
+    return this.wcl.enabled;
+  }
+
   refresh(character: string, who: { name: string; realm: string; region: Region }) {
     if (!this.wcl.enabled) return;
     if (this.running || (character === this.key && Date.now() - this.at < REFRESH_MS)) return;
