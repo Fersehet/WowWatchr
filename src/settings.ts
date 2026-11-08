@@ -8,6 +8,7 @@ const LAYOUTS = ['a', 'c', 'd'] as const;
 export const REGIONS = ['eu', 'us', 'kr', 'tw'] as const;
 export type Region = (typeof REGIONS)[number];
 export const GAMES = ['retail', 'forever'] as const;
+export const DISCORD_STYLES = ['table', 'tiles'] as const;
 
 export interface Settings {
   layout: (typeof LAYOUTS)[number];
@@ -20,6 +21,8 @@ export interface Settings {
   lang: Lang;
   accent: string;
   diffColors: boolean; // Schwierigkeiten in Grün/Blau/Lila statt in der Akzentfarbe
+  discordStyle: (typeof DISCORD_STYLES)[number]; // Tabelle als Text oder Kacheln als Bild
+  discordLang: Lang; // Discord kann nicht übersetzen, also eine Sprache für den Kanal
 }
 
 export const DEFAULTS: Settings = {
@@ -33,6 +36,8 @@ export const DEFAULTS: Settings = {
   lang: 'en',
   accent: '#ffd100',
   diffColors: true,
+  discordStyle: 'table',
+  discordLang: 'en',
 };
 
 function text(value: unknown, fallback: string): string {
@@ -61,6 +66,8 @@ export function sanitize(input: unknown): Settings {
     lang: LANGS.includes(raw.lang) ? raw.lang : DEFAULTS.lang,
     accent: typeof raw.accent === 'string' && /^#[0-9a-f]{6}$/i.test(raw.accent) ? raw.accent : DEFAULTS.accent,
     diffColors: raw.diffColors !== false,
+    discordStyle: DISCORD_STYLES.includes(raw.discordStyle) ? raw.discordStyle : DEFAULTS.discordStyle,
+    discordLang: LANGS.includes(raw.discordLang) ? raw.discordLang : DEFAULTS.discordLang,
   };
 }
 

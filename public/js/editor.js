@@ -16,11 +16,14 @@ let uiLang = [new URLSearchParams(location.search).get('lang'), localStorage.get
 const langOptions = LANGS.map((id) => `<option value="${id}">${id.toUpperCase()}</option>`).join('');
 $('editorLang').innerHTML = langOptions;
 $('overlayLang').innerHTML = langOptions;
+$('discordLang').innerHTML = langOptions;
 $('region').innerHTML = ['eu', 'us', 'kr', 'tw'].map((id) => `<option value="${id}">${id.toUpperCase()}</option>`).join('');
 
 let saveTimer;
 let saveFailed = false;
 let dataStatus = 'demo';
+// Discord: der Server sagt nur, ob ein Webhook gesetzt ist, den Link selbst nie
+let discord = { connected: false, note: '' };
 
 // Zeigt im Kopf, ob echte Daten oder Beispieldaten laufen
 async function loadStatus() {
@@ -82,6 +85,12 @@ function drawControls() {
   $('realmLabel').textContent = settings.game === 'forever' ? t.surname : t.realm;
   $('accent').value = settings.accent;
   $('diffColors').value = settings.diffColors ? 'on' : 'off';
+  $('discordStyle').value = settings.discordStyle;
+  $('discordLang').value = settings.discordLang;
+  $('discordConnect').hidden = discord.connected;
+  $('discordRemove').hidden = !discord.connected;
+  $('discordTest').disabled = !discord.connected;
+  $('discordState').textContent = discord.note ? t[discord.note] : t[discord.connected ? 'discordOn' : 'discordOff'];
   // Beim Tippen den Cursor nicht verlieren
   for (const id of ['name', 'realm', 'interval']) if (document.activeElement !== $(id)) $(id).value = settings[id];
 
@@ -261,6 +270,32 @@ $('interval').addEventListener('change', (e) => save({ interval: Number(e.target
 $('accent').addEventListener('input', (e) => save({ accent: e.target.value }));
 $('diffColors').addEventListener('change', (e) => save({ diffColors: e.target.value === 'on' }));
 $('accentReset').addEventListener('click', () => save({ accent: DEFAULT_ACCENT }));
+$('discordStyle').addEventListener('change', (e) => save({ discordStyle: e.target.value }));
+$('discordLang').addEventListener('change', (e) => save({ discordLang: e.target.value }));
+
+async function setDiscord(url) {
+  const res = await fetch('/api/discord', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }).catch(() => null);
+  if (res?.status === 401) return toLogin();
+  if (res?.ok) {
+    discord = { ...(await res.json()), note: '' };
+    $('discordUrl').value = '';
+  } else discord.note = res?.status === 400 ? 'discordInvalid' : 'saveError';
+  drawControls();
+}
+$('discordSave').addEventListener('click', () => setDiscord($('discordUrl').value));
+$('discordUrl').addEventListener('keydown', (e) => e.key === 'Enter' && setDiscord($('discordUrl').value));
+$('discordRemove').addEventListener('click', () => setDiscord(''));
+$('discordTest').addEventListener('click', async () => {
+  $('discordTest').disabled = true;
+  const res = await fetch('/api/discord/test', { method: 'POST' }).catch(() => null);
+  if (res?.status === 401) return toLogin();
+  discord.note = res?.ok ? 'discordTestOk' : 'discordTestFail';
+  drawControls();
+  setTimeout(() => {
+    discord.note = '';
+    drawControls();
+  }, 5000);
+});
 $('logout').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST' });
   location.href = '/login.html';
@@ -274,6 +309,10 @@ new EventSource('/api/events').addEventListener('settings', () => {
   loadStatus();
   if (tab === 'stats') loadStats(uiLang);
 });
+fetch('/api/discord').then((r) => (r.ok ? r.json() : null)).then((d) => {
+  if (d) discord = { connected: d.connected, note: '' };
+  drawControls();
+}, () => {});
 const me = await fetch('/api/me').then((r) => r.json()).catch(() => null);
 if (me?.user) $('accountName').textContent = me.user;
 // Ohne Login (kein Passwort in der .env) gibt es nichts zum Abmelden
