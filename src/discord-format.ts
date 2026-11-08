@@ -241,25 +241,27 @@ export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: stri
   if (log?.players.length && look.style === 'mix') {
     // Mix: Kachel-Look, aber alle Werte der Tabelle
     const list = top(log.players, me);
+    // Jede Spalte hat eine feste Mitte; Kopf und Werte werden darauf zentriert,
+    // damit schmale Zahlen (0, 1, 12) genau unter ihrer Überschrift stehen.
     const cols = [
-      { k: t.dps, x: P + 380, v: (p: PlayerStats) => short(p.dps, look.lang) },
-      { k: t.hps, x: P + 480, v: (p: PlayerStats) => short(p.hps, look.lang) },
-      { k: t.dth, x: P + 560, v: (p: PlayerStats) => String(p.deaths) },
-      { k: t.int, x: P + 640, v: (p: PlayerStats) => String(p.interrupts) },
-      { k: t.prs, x: W - P, v: (p: PlayerStats) => (p.parse == null ? '–' : String(p.parse)) },
+      { k: t.dps, x: 384, v: (p: PlayerStats) => short(p.dps, look.lang) },
+      { k: t.hps, x: 476, v: (p: PlayerStats) => short(p.hps, look.lang) },
+      { k: t.dth, x: 560, v: (p: PlayerStats) => String(p.deaths) },
+      { k: t.int, x: 636, v: (p: PlayerStats) => String(p.interrupts) },
+      { k: t.prs, x: 712, v: (p: PlayerStats) => (p.parse == null ? '–' : String(p.parse)) },
     ];
     text(P + 14, y + 14, t.player.toUpperCase(), 12, '#8b90a0', 600);
-    for (const c of cols) text(c.x - 14, y + 14, c.k.toUpperCase(), 12, '#8b90a0', 600, 'end');
+    for (const c of cols) text(c.x, y + 14, c.k.toUpperCase(), 12, '#8b90a0', 600, 'middle');
     y += 26;
     list.forEach((p, i) => {
       const mine = p.name === me;
       // Jede Zeile gleich: eine Fläche, alle Werte auf einer Linie
       out.push(`<rect x="${P}" y="${y}" width="${W - 2 * P}" height="40" rx="6" fill="${mine ? '#1b1f28' : '#151820'}"/>`);
-      text(P + 14, y + 26, fit(p.name, 16, 220), 16, mine ? f.color : '#e6e6ea', 600);
+      text(P + 14, y + 26, fit(p.name, 16, 260), 16, mine ? f.color : '#e6e6ea', 600);
       for (const c of cols) {
         const value = c.v(p);
         const color = c.k === t.prs ? parseColor(p.parse) : c.k === t.dth && p.deaths ? RED : '#ffffff';
-        text(c.x - 14, y + 26, value, 16, color, 700, 'end');
+        text(c.x, y + 26, value, 16, color, 700, 'middle');
       }
       y += 46;
     });
