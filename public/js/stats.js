@@ -61,7 +61,7 @@ function renderChart(t, runs) {
   $('chartNote').textContent = t.stChartNote;
 
   const chart = $('ratingChart');
-  const W = 600, H = 220, left = 40, right = 8, top = 22, bottom = 28;
+  const W = 600, H = 236, left = 40, right = 8, top = 22, bottom = 44;
   if (!runs.length) {
     chart.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" class="empty">${esc(t.stNoRuns)}</text>`;
     chart.setAttribute('aria-label', t.stNoRuns);
@@ -82,11 +82,25 @@ function renderChart(t, runs) {
     const label = name(run.dungeon);
     svg += `<rect class="bar${run.result < 0 ? ' over' : ''}" x="${x}" y="${y(run.rating)}" width="${bar}" height="${y(0) - y(run.rating)}" rx="3"><title>${esc(label)} +${run.key} · ${num(run.rating, 1)}</title></rect>`;
     svg += `<text class="key" x="${x + bar / 2}" y="${y(run.rating) - 6}" text-anchor="middle">+${run.key}</text>`;
-    const short = label.length > 9 ? `${label.slice(0, 8)}…` : label;
-    svg += `<text x="${x + bar / 2}" y="${H - 8}" text-anchor="middle">${esc(short)}<title>${esc(label)}</title></text>`;
+    const [one, two] = twoLines(label, Math.max(6, Math.floor(slot / 7)));
+    svg += `<text x="${x + bar / 2}" y="${H - 24}" text-anchor="middle">${esc(one)}${two ? `<tspan x="${x + bar / 2}" dy="14">${esc(two)}</tspan>` : ''}<title>${esc(label)}</title></text>`;
   });
   chart.innerHTML = svg;
   chart.setAttribute('aria-label', t.stMplusHead);
+}
+
+/** Dungeon-Name auf höchstens zwei Zeilen, an Wortgrenzen; nur was dann noch zu lang ist, wird gekürzt */
+function twoLines(label, max) {
+  const cut = (text) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+  const words = label.split(' ');
+  if (label.length <= max || words.length === 1) return [cut(label), ''];
+  // Trennstelle, an der die längere Zeile am kürzesten ist
+  let best = 1;
+  for (let i = 1; i < words.length; i++) {
+    const len = (k) => Math.max(words.slice(0, k).join(' ').length, words.slice(k).join(' ').length);
+    if (len(i) < len(best)) best = i;
+  }
+  return [cut(words.slice(0, best).join(' ')), cut(words.slice(best).join(' '))];
 }
 
 function renderSeason(t) {
