@@ -1,7 +1,7 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { Auth, type LoginError } from './auth.ts';
 import { DEMO_CODE, demoFight, demoHistory, demoState } from './demo.ts';
 import { Discord } from './discord.ts';
@@ -15,6 +15,8 @@ const ROOT = join(import.meta.dirname, '..');
 if (existsSync(join(ROOT, '.env'))) process.loadEnvFile(join(ROOT, '.env'));
 
 const PUBLIC = join(ROOT, 'public');
+// Optionale eigene Startseite für / (das Repo WowWatchr-Website, geklont nach website/)
+const SITE = resolve(ROOT, process.env.SITE_DIR?.trim() || 'website');
 const DATA = join(ROOT, 'data');
 const SETTINGS_FILE = join(DATA, 'settings.json');
 const PORT = Number(process.env.PORT) || 3312;
@@ -75,6 +77,9 @@ function isPublic(req: Request) {
     ].includes(req.path)
   );
 }
+
+// Die Startseite ist ohne Login erreichbar. Fehlt sie, führt / zum Editor.
+app.use(express.static(SITE));
 
 const hostOf = (url: string) => URL.parse(url)?.host ?? null;
 
