@@ -83,9 +83,9 @@ const LAYOUTS = {
         <div class="stack end" style="gap:2px"><div class="lbl">${v.t.progress}</div><div class="title accent">${v.top}</div></div>
       </div>
       <div class="stack bottom" style="gap:16px">${each(v.raids, (r) => `
-        <div>
+        <div class="q-${r.id}">
           <div class="row" style="margin-bottom:7px">
-            <span class="grow" style="font-size:16px;font-weight:600">${r.name}</span>
+            <span class="grow dname" style="font-size:16px;font-weight:600">${r.name}</span>
             <span class="lbl">${v.t.kills}</span><span style="font-size:14px;font-weight:700;min-width:22px;text-align:right">${r.kills}</span>
             ${r.parse == null ? '' : `<span class="lbl" style="margin-left:8px">${v.t.parse}</span><span style="font-size:14px;font-weight:700;min-width:22px;text-align:right">${r.parse}</span>`}
             <span class="accent" style="font-size:16px;font-weight:700;margin-left:8px;min-width:30px;text-align:right">${r.prog}</span>
@@ -118,8 +118,8 @@ const LAYOUTS = {
       <div class="stack" style="min-width:110px"><div class="lbl">${v.t.progress}</div><div class="big accent">${v.top}</div></div>
       <div class="div"></div>
       ${each(v.raids, (r) => `
-        <div class="stack grow" style="gap:6px">
-          <div class="row between"><span style="font-size:14px;font-weight:600">${r.name}</span><span style="font-size:16px;font-weight:700">${r.prog}</span></div>
+        <div class="stack grow q-${r.id}" style="gap:6px">
+          <div class="row between"><span class="dname" style="font-size:14px;font-weight:600">${r.name}</span><span style="font-size:16px;font-weight:700">${r.prog}</span></div>
           <div class="pips">${r.pips}</div>
         </div>`)}`,
   },
@@ -159,5 +159,5 @@ const LAYOUTS = {
 
 export function renderPage(container, settings, state, page) {
   const inner = LAYOUTS[settings.layout][page](view(state, settings.lang));
-  container.innerHTML = `<div class="ov ${settings.layout}" lang="${settings.lang}" style="--accent:${settings.accent}">${inner}</div>`;
+  container.innerHTML = `<div class="ov ${settings.layout}${settings.diffColors ? ' qc' : ''}" lang="${settings.lang}" style="--accent:${settings.accent}">${inner}</div>`;
 }
