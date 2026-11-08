@@ -292,6 +292,14 @@ table.bosses { width: 100%; border-collapse: collapse; font-size: 14px; font-var
 .bosses td { padding: 8px; border-top: 1px solid var(--border); text-align: right; font-family: var(--f-mono); white-space: nowrap; }
 .bosses td:first-child { text-align: left; padding-left: 0; font-family: var(--f-body); white-space: normal; }
 .bosses td.zero { color: #4a556b; }
+/* Warcraft Logs: Boss anklicken, Werte pro Spieler */
+.bosses tr.pick { cursor: pointer; }
+.bosses tr.pick:hover td, .bosses tr.picked td { background: rgba(255, 255, 255, .03); }
+.bosses tr.picked td:first-child { box-shadow: inset 2px 0 0 var(--accent); padding-left: 8px; }
+.players tr.me td:first-child { color: var(--accent); font-weight: 600; }
+.players td.down { color: var(--down); }
+.parse { font-weight: 700; color: var(--p); }
+.boss-stats { display: grid; gap: 8px; }
 .fallen { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .fallen li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
 .fallen b { font: 700 13px/1.4 var(--f-mono); color: var(--accent); white-space: nowrap; }

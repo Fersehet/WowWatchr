@@ -58,6 +58,22 @@ const DAY = 86_400_000;
 const RAID_NAME = loc('Beispielraid', 'Sample raid', 'Пример рейда', "Raid d'exemple");
 const boss = (n: number) => loc(`Boss ${n}`, `Boss ${n}`, `Босс ${n}`, `Boss ${n}`);
 
+export const DEMO_CODE = 'DemoReport000001';
+
+/** Beispielwerte pro Spieler wie aus Warcraft Logs */
+export function demoFight(fight: number) {
+  const specs = ['Mage-Frost', 'Warrior-Protection', 'Priest-Holy', 'DemonHunter-Havoc', 'Druid-Restoration'];
+  return PARTY.map(([name], i) => ({
+    name,
+    spec: specs[i],
+    dps: [512_400, 198_300, 61_200, 488_900, 54_700][i] - fight * 1_000,
+    hps: [8_100, 21_400, 402_600, 6_300, 377_800][i],
+    deaths: i === 3 && fight % 2 ? 1 : 0,
+    interrupts: [4, 7, 0, 5, 1][i],
+    parse: [93, 71, 64, 88, 79][i],
+  })).sort((a, b) => b.dps - a.dps);
+}
+
 export function demoHistory() {
   const now = Date.now();
   // 20 Uhr vor ein paar Tagen, damit ein Raid-Abend nicht über Mitternacht geht
@@ -82,6 +98,23 @@ export function demoHistory() {
       ...[1, 2, 3].map((i) => ({ at: evening(1) + i * 1_800_000, raid: RAID_NAME, boss: boss(i), difficulty: 'mythic', count: 1 })),
       ...[4, 5].map((i) => ({ at: evening(3) + i * 1_800_000, raid: RAID_NAME, boss: boss(i), difficulty: 'heroic', count: 1 })),
     ],
+    // Warcraft Logs: ein Raid-Abend mit Versuchen und ein Dungeon
+    logs: { status: 'demo', reports: [
+      {
+        code: DEMO_CODE, title: 'Raid', start: evening(1), end: evening(1) + 9_000_000, zone: RAID_NAME,
+        fights: [
+          [1, 1, 300_000, 420_000, false, 34.5], [2, 1, 600_000, 900_000, true, 0], [3, 2, 1_200_000, 1_470_000, true, 0],
+          ...[0, 1, 2, 3, 4].map((n) => [4 + n, 3, 1_800_000 + n * 600_000, 2_100_000 + n * 600_000, false, 62 - n * 11]),
+          [9, 3, 4_800_000, 5_190_000, true, 0],
+        ].map(([id, b, start, end, kill, percent]) => ({
+          id, name: boss(Number(b)), encounterId: b, start, end, kill, difficulty: 5, percent, keyLevel: null, keyTime: null, keyBonus: null,
+        })),
+      },
+      {
+        code: DEMO_CODE, title: 'M+', start: now - 0.5 * DAY - 1_800_000, end: now - 0.5 * DAY, zone: dungeon(0),
+        fights: [{ id: 20, name: dungeon(0), encounterId: 1, start: 60_000, end: 1_800_000, kill: true, difficulty: 10, percent: 0, keyLevel: 14, keyTime: ms(RUNS[0].time), keyBonus: 2 }],
+      },
+    ] },
     raids: [{
       id: 1,
       name: RAID_NAME,
