@@ -21,7 +21,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 
 ## What it looks like
 
-**Editor:** pick a layout, switch pages on or off, change the accent colour, character name or overlay language. The preview and OBS follow every change right away.
+**Editor:** pick a layout, switch pages on or off, change the accent colour, character name or overlay language, and choose whether Normal, Heroic and Mythic show in their own colours (green, blue, purple) or in the accent colour. The preview and OBS follow every change right away.
 
 ![Editor with the overlay preview](docs/screenshots/editor.png)
 
