@@ -291,6 +291,10 @@ $('discordTest').addEventListener('click', async () => {
   if (res?.status === 401) return toLogin();
   discord.note = res?.ok ? 'discordTestOk' : 'discordTestFail';
   drawControls();
+  setTimeout(() => {
+    discord.note = '';
+    drawControls();
+  }, 5000);
 });
 $('logout').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST' });

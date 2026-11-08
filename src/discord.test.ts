@@ -167,3 +167,32 @@ test('alle Texte der Posts gibt es in allen vier Sprachen', () => {
     assert.ok(!/undefined/.test(JSON.stringify(post.payload)), lang);
   }
 });
+
+test('ein im Kanal gelöschter Post hält die anderen nicht auf, ein Warcraft-Logs-Fehler wird später nochmal versucht', async () => {
+  const history = new History(':memory:');
+  const calls: { method: string; url: string }[] = [];
+  const fetchFn = (async (url: string | URL, init?: RequestInit) => {
+    calls.push({ method: String(init?.method), url: String(url) });
+    if (init?.method === 'PATCH') return new Response('{"message":"Unknown Message"}', { status: 404 });
+    return new Response(JSON.stringify({ id: `m${calls.length}` }), { status: 200 });
+  }) as typeof fetch;
+  const discord = new Discord(history.db, join(mkdtempSync(join(tmpdir(), 'ww-')), 'discord-webhook'), fetchFn);
+  discord.setUrl(HOOK);
+  const at = Date.now() - 60_000;
+  history.save('c', { runs: [], raids: [] });
+  await discord.announce('c', history.save('c', { runs: [run(at, 14)], raids: [] }), LOOK, 'Vaelric');
+  const report: Report = { code: 'x', title: '', start: at - 1_000_000, end: at, zone: '', fights: [
+    { id: 5, name: 'Skyreach', encounterId: 1, start: 0, end: 1_000_000, kill: true, difficulty: 10, percent: 0, keyLevel: 14, keyTime: 1_500_000, keyBonus: 2 },
+  ] };
+
+  // Warcraft Logs antwortet nicht: kein Bearbeiten, Post bleibt offen
+  await discord.work('c', LOOK, 'Vaelric', [report], async () => { throw new Error('WCL down'); });
+  assert.deepEqual(calls.map((c) => c.method), ['POST']);
+
+  // Log da, aber der Post wurde in Discord gelöscht (404): aufgeben und den neuen Run trotzdem senden
+  await discord.announce('c', history.save('c', { runs: [run(at, 14), { ...run(at + 1, 15), dungeonId: 162 }], raids: [] }), LOOK, 'Vaelric');
+  await discord.work('c', LOOK, 'Vaelric', [report], async () => [{ name: 'Vaelric', dps: 1, hps: 1, deaths: 0, interrupts: 0, parse: null }]);
+  assert.deepEqual(calls.map((c) => c.method), ['POST', 'POST', 'PATCH']);
+  await discord.work('c', LOOK, 'Vaelric', [report], async () => []);
+  assert.deepEqual(calls.map((c) => c.method), ['POST', 'POST', 'PATCH']);
+});

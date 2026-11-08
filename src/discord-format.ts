@@ -46,7 +46,7 @@ export const TEXTS: Record<Lang, Record<string, any>> = {
   de: {
     newBest: 'Neuer Bestwert', timed: 'In der Zeit +{n}', overTime: 'Zeit überschritten', killed: '{boss} besiegt',
     time: 'Zeit', toSpare: 'Reserve', over: 'Drüber', runRating: 'Run-Wertung', affixes: 'Affixe', ilvl: 'Itemlevel', group: 'Gruppe',
-    player: 'Spieler', dth: 'Tod', int: 'Unt', prs: 'Prs', tries: 'Versuche', fight: 'Kampf', bestWipe: 'Bester Wipe', progress: 'Fortschritt',
+    dps: 'DPS', hps: 'HPS', player: 'Spieler', dth: 'Tod', int: 'Unt', prs: 'Prs', tries: 'Versuche', fight: 'Kampf', bestWipe: 'Bester Wipe', progress: 'Fortschritt',
     topHps: 'Top-HPS', mostInt: 'Meiste Unterbrechungen', deaths: 'Tode', more: '{n} Spieler · die besten 5 hier, alle im Log',
     statsLater: 'Spielerwerte folgen, sobald das Warcraft-Logs-Log hochgeladen ist.', footer: 'WowWatchr · Blizzard-API', footerLogs: 'WowWatchr · Blizzard-API + Warcraft Logs',
     testTitle: 'Testpost von WowWatchr', testNote: 'WowWatchr ist mit diesem Kanal verbunden. So sehen deine Posts aus (Beispieldaten).',
@@ -55,7 +55,7 @@ export const TEXTS: Record<Lang, Record<string, any>> = {
   en: {
     newBest: 'New best run', timed: 'Timed +{n}', overTime: 'Over time', killed: '{boss} killed',
     time: 'Time', toSpare: 'To spare', over: 'Over', runRating: 'Run rating', affixes: 'Affixes', ilvl: 'Item level', group: 'Group',
-    player: 'Player', dth: 'Dth', int: 'Int', prs: 'Prs', tries: 'Tries', fight: 'Fight', bestWipe: 'Best wipe', progress: 'Progress',
+    dps: 'DPS', hps: 'HPS', player: 'Player', dth: 'Dth', int: 'Int', prs: 'Prs', tries: 'Tries', fight: 'Fight', bestWipe: 'Best wipe', progress: 'Progress',
     topHps: 'Top HPS', mostInt: 'Most interrupts', deaths: 'Deaths', more: '{n} players · top 5 shown, all in the log',
     statsLater: 'Player stats follow once the Warcraft Logs report is uploaded.', footer: 'WowWatchr · Blizzard API', footerLogs: 'WowWatchr · Blizzard API + Warcraft Logs',
     testTitle: 'WowWatchr test post', testNote: 'WowWatchr is connected to this channel. This is how your posts will look (sample data).',
@@ -64,8 +64,8 @@ export const TEXTS: Record<Lang, Record<string, any>> = {
   ru: {
     newBest: 'Новый рекорд', timed: 'В срок +{n}', overTime: 'Время вышло', killed: '{boss} побеждён',
     time: 'Время', toSpare: 'Запас', over: 'Сверх', runRating: 'Рейтинг забега', affixes: 'Модификаторы', ilvl: 'Ур. предметов', group: 'Группа',
-    player: 'Игрок', dth: 'Смр', int: 'Прр', prs: 'Прс', tries: 'Попытки', fight: 'Бой', bestWipe: 'Лучший вайп', progress: 'Прогресс',
-    topHps: 'Лучший HPS', mostInt: 'Больше всего прерываний', deaths: 'Смерти', more: '{n} игроков · здесь лучшие 5, все в логе',
+    dps: 'УВС', hps: 'ИВС', player: 'Игрок', dth: 'Смр', int: 'Прр', prs: 'Прс', tries: 'Попытки', fight: 'Бой', bestWipe: 'Лучший вайп', progress: 'Прогресс',
+    topHps: 'Лучший ИВС', mostInt: 'Больше всего прерываний', deaths: 'Смерти', more: '{n} игроков · здесь лучшие 5, все в логе',
     statsLater: 'Статистика игроков появится, когда лог Warcraft Logs будет загружен.', footer: 'WowWatchr · Blizzard API', footerLogs: 'WowWatchr · Blizzard API + Warcraft Logs',
     testTitle: 'Тестовый пост WowWatchr', testNote: 'WowWatchr подключён к этому каналу. Так будут выглядеть твои посты (пример).',
     diff: { normal: 'Обычный', heroic: 'Героический', mythic: 'Эпохальный' },
@@ -73,7 +73,7 @@ export const TEXTS: Record<Lang, Record<string, any>> = {
   fr: {
     newBest: 'Nouveau record', timed: 'Dans les temps +{n}', overTime: 'Temps dépassé', killed: '{boss} vaincu',
     time: 'Temps', toSpare: 'Avance', over: 'Retard', runRating: 'Score du donjon', affixes: 'Affixes', ilvl: "Niveau d'objet", group: 'Groupe',
-    player: 'Joueur', dth: 'Mrt', int: 'Int', prs: 'Prs', tries: 'Essais', fight: 'Combat', bestWipe: 'Meilleur wipe', progress: 'Progression',
+    dps: 'DPS', hps: 'HPS', player: 'Joueur', dth: 'Mrt', int: 'Int', prs: 'Prs', tries: 'Essais', fight: 'Combat', bestWipe: 'Meilleur wipe', progress: 'Progression',
     topHps: 'Meilleur HPS', mostInt: "Plus d'interruptions", deaths: 'Morts', more: '{n} joueurs · les 5 meilleurs ici, tous dans le log',
     statsLater: 'Les stats des joueurs arrivent dès que le log Warcraft Logs est en ligne.', footer: 'WowWatchr · API Blizzard', footerLogs: 'WowWatchr · API Blizzard + Warcraft Logs',
     testTitle: 'Message de test WowWatchr', testNote: 'WowWatchr est connecté à ce salon. Voici à quoi ressembleront tes messages (exemple).',
@@ -157,7 +157,7 @@ const pad = (s: string, n: number, right = false) => {
   return right ? cut.padStart(n) : cut.padEnd(n);
 };
 
-/** G: Discord-Karte mit der Spielertabelle als Code-Block */
+/** Tabelle: Discord-Karte mit der Spielertabelle als Code-Block */
 function table(event: Event, log: LogInfo | null, look: Look, me: string): Post {
   const t = TEXTS[look.lang];
   const f = facts(event, log, look);
@@ -165,7 +165,7 @@ function table(event: Event, log: LogInfo | null, look: Look, me: string): Post 
   if (log?.players.length) {
     const rows = top(log.players, me).map((p) =>
       `${pad(p.name, 12)} ${pad(short(p.dps, look.lang), 6, true)} ${pad(short(p.hps, look.lang), 6, true)} ${pad(String(p.deaths), 3, true)} ${pad(String(p.interrupts), 3, true)} ${pad(p.parse == null ? '–' : String(p.parse), 3, true)}`);
-    const head = `${pad(t.player, 12)} ${pad('DPS', 6, true)} ${pad('HPS', 6, true)} ${pad(t.dth, 3, true)} ${pad(t.int, 3, true)} ${pad(t.prs, 3, true)}`;
+    const head = `${pad(t.player, 12)} ${pad(t.dps, 6, true)} ${pad(t.hps, 6, true)} ${pad(t.dth, 3, true)} ${pad(t.int, 3, true)} ${pad(t.prs, 3, true)}`;
     lines.push('```', head, ...rows, '```');
     if (log.players.length > 5) lines.push(fill(t.more, { n: log.players.length }));
     lines.push(highlights(log.players, look).map((h) => `${h.k}: **${h.v}**`).join(' · '));
@@ -188,7 +188,7 @@ function table(event: Event, log: LogInfo | null, look: Look, me: string): Post 
   };
 }
 
-// ---------- H: Kacheln als Bild, im Look des Overlays ----------
+// ---------- Kacheln als Bild, im Look des Overlays ----------
 
 const FONT_DIR = join(import.meta.dirname, '..', 'public', 'fonts');
 const FONTS = ['Geist-Regular.ttf', 'Geist-SemiBold.ttf', 'Geist-Bold.ttf'].map((f) => join(FONT_DIR, f));

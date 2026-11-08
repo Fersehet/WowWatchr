@@ -85,7 +85,7 @@ export class Discord {
       await new Promise((r) => setTimeout(r, Math.min(wait, 30) * 1000));
       return this.call(method, path, post, false);
     }
-    if (!res.ok) throw new Error(`Discord ${res.status}`);
+    if (!res.ok) throw Object.assign(new Error(`Discord ${res.status}`), { status: res.status });
     return (await res.json()) as { id: string };
   }
 
@@ -117,18 +117,29 @@ export class Discord {
       const rows = this.db.prepare('SELECT id, at, event, message, log FROM discord_posts WHERE character = ? AND done = 0 ORDER BY at').all(character) as unknown as Row[];
       for (const row of rows) {
         const event = JSON.parse(row.event) as Event;
+        const stale = Date.now() - row.at > PENDING_MS;
         let log = row.log ? (JSON.parse(row.log) as LogInfo) : null;
         const found = log ? null : findLog(event, reports);
-        if (found) log = { ...found.info, players: await stats(found.code, found.fight).catch(() => []) };
+        if (found) {
+          // Warcraft Logs gerade nicht erreichbar oder noch leer: beim nächsten Durchlauf erneut versuchen
+          const players = await stats(found.code, found.fight).catch(() => []);
+          if (players.length) log = { ...found.info, players };
+          else if (row.message && !stale) continue;
+        }
         try {
           let message = row.message;
           if (!message) message = await this.send(buildPost(event, log, look, me));
-          else if (found) await this.edit(message, buildPost(event, log, look, me));
-          const done = Boolean(log) || !look.logsEnabled || Date.now() - row.at > PENDING_MS;
+          else if (log && !row.log) await this.edit(message, buildPost(event, log, look, me));
+          const done = Boolean(log) || !look.logsEnabled || stale;
           this.db.prepare('UPDATE discord_posts SET message = ?, log = ?, done = ? WHERE id = ?').run(message, log ? JSON.stringify(log) : null, Number(done), row.id);
         } catch (error) {
           console.warn('WowWatchr: Discord-Post fehlgeschlagen:', (error as Error).message);
-          if (Date.now() - row.at > PENDING_MS) this.db.prepare('UPDATE discord_posts SET done = 1 WHERE id = ?').run(row.id);
+          // Discord lehnt genau diesen Post ab (z. B. im Kanal gelöscht, neuer Webhook): aufgeben, die anderen nicht aufhalten
+          const status = (error as { status?: number }).status ?? 0;
+          if (stale || (status >= 400 && status < 500)) {
+            this.db.prepare('UPDATE discord_posts SET done = 1 WHERE id = ?').run(row.id);
+            continue;
+          }
           break; // Discord gerade nicht erreichbar: beim nächsten Durchlauf weiter
         }
       }
