@@ -17,7 +17,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 - An editor in your browser with a live preview, protected by a login if you set a password, and every change shows up in OBS right away
 - A **Statistics** page in the editor: your recent dungeons and raids, each row opens with the group, timer, affixes and the bosses killed
 - Real character data from the official Blizzard API, with your own free key, and optionally Warcraft Logs for tries, kill times and DPS, HPS, deaths, interrupts and parses per player
-- **Discord posts** through a webhook: every new best dungeon run and every boss kill, filled in with the stats of every player once the Warcraft Logs report is up
+- **Discord posts** through a webhook: every new best dungeon run and every boss kill, and with Warcraft Logs every logged run, filled in with the stats of every player once the report is up
 - Editor and overlay in English, German, Russian and French
 
 ## What it looks like
@@ -115,13 +115,13 @@ With an optional Warcraft Logs key, the Statistics page also shows tries, best t
 
 ## Discord
 
-WowWatchr can post your results in a Discord channel: one post for every new best dungeon run and one for every boss kill, right when Blizzard reports it. With Warcraft Logs, the same post is filled in later with tries, fight time, best wipe and DPS, HPS, deaths, interrupts and parse of every player. No bot is needed, a webhook is enough.
+WowWatchr can post your results in a Discord channel: one post for every new best dungeon run and one for every boss kill, right when Blizzard reports it. With Warcraft Logs, the same post is filled in later with tries, fight time, best wipe and DPS, HPS, deaths, interrupts and parse of every player, and every other dungeon run that was logged and uploaded gets its own post too. Runs and player stats are saved on your server. No bot is needed, a webhook is enough.
 
 1. In Discord, open the channel settings: **Edit channel → Integrations → Webhooks → New webhook**, then **Copy webhook URL**.
 2. In the editor under **Discord**, paste the link and click **Connect**. The link stays on your server and is never shown again.
 3. Pick the look and the language of the posts, then click **Send test post**.
 
-Two looks to choose from:
+Three looks to choose from:
 
 **Table:** a Discord card with a table of the players, as plain text.
 
@@ -131,7 +131,11 @@ Two looks to choose from:
 
 <p align="center"><img src="docs/screenshots/discord-tiles.png" alt="Discord picture for a new best dungeon run with time, time to spare, run rating, affixes and damage bars per player" width="620"></p>
 
-Nothing old is posted when you connect: runs and kills from before count as the starting point. Blizzard only reports your best run per dungeon, so a key below your best doesn't get a post. If the server is off during a raid, the kills are posted when it is back on.
+**Mix:** the picture from Tiles with the whole player table from Table.
+
+<p align="center"><img src="docs/screenshots/discord-mix.png" alt="Discord picture for a new best dungeon run with big numbers and a table of DPS, HPS, deaths, interrupts and parse per player" width="620"></p>
+
+Nothing old is posted when you connect: runs and kills from before count as the starting point. Blizzard only reports your best run per dungeon, so a key below your best only gets a post when it is in a Warcraft Logs report. If the server is off during a raid, the kills are posted when it is back on.
 
 ## Adding it to OBS
 

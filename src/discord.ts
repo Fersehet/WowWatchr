@@ -46,6 +46,17 @@ export class Discord {
         done INTEGER NOT NULL DEFAULT 0
       );
     `);
+    // ref = Kampf im Log (code:fight) bei Runs aus Warcraft Logs, damit jeder nur einmal gepostet wird
+    const columns = db.prepare('PRAGMA table_info(discord_posts)').all() as { name: string }[];
+    if (!columns.some((c) => c.name === 'ref')) db.exec('ALTER TABLE discord_posts ADD COLUMN ref TEXT');
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_discord_ref ON discord_posts (ref)');
+    // Ab wann Runs aus Warcraft Logs gepostet werden: ab dem Verbinden, bei bestehenden Installationen ab diesem Update
+    db.exec('CREATE TABLE IF NOT EXISTS discord_meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL)');
+    db.prepare("INSERT OR IGNORE INTO discord_meta (key, value) VALUES ('since', ?)").run(Date.now());
+  }
+
+  private get since() {
+    return (this.db.prepare("SELECT value FROM discord_meta WHERE key = 'since'").get() as { value: number }).value;
   }
 
   get url() {
@@ -63,6 +74,7 @@ export class Discord {
     if (!validWebhook(url)) throw new Error('invalid');
     mkdirSync(dirname(this.file), { recursive: true });
     writeFileSync(this.file, url, { mode: 0o600 });
+    this.db.prepare("UPDATE discord_meta SET value = ? WHERE key = 'since'").run(Date.now());
     chmodSync(this.file, 0o600);
   }
 
@@ -101,9 +113,38 @@ export class Discord {
   async announce(character: string, fresh: { runs: Run[]; kills: NewKill[] }, look: Look, me: string) {
     if (!this.connected) return;
     const insert = this.db.prepare('INSERT INTO discord_posts (character, at, event) VALUES (?, ?, ?)');
-    for (const run of fresh.runs) insert.run(character, run.at, JSON.stringify({ kind: 'run', run } satisfies Event));
+    // Gibt es den Run schon als Post aus Warcraft Logs, wird dieser Post zum Bestwert umgeschrieben statt doppelt gepostet
+    const logged = this.db.prepare('SELECT id, event FROM discord_posts WHERE character = ? AND ref IS NOT NULL AND at BETWEEN ? AND ?');
+    const upgrade = this.db.prepare('UPDATE discord_posts SET event = ?, log = NULL, done = 0 WHERE id = ?');
+    for (const run of fresh.runs) {
+      const event = JSON.stringify({ kind: 'run', run } satisfies Event);
+      const twin = (logged.all(character, run.at - MATCH_MS, run.at + MATCH_MS) as { id: number; event: string }[])
+        .find((r) => (JSON.parse(r.event) as Event).kind === 'run' && (JSON.parse(r.event) as { run: Run }).run.key === run.key);
+      if (twin) upgrade.run(event, twin.id);
+      else insert.run(character, run.at, event);
+    }
     for (const { killed, total, ...kill } of fresh.kills) insert.run(character, kill.at, JSON.stringify({ kind: 'kill', kill, killed, total } satisfies Event));
     await this.work(character, look, me, [], async () => []);
+  }
+
+  /** Jeder Dungeon aus Warcraft Logs seit dem Verbinden wird ein Post, auch wenn er kein Bestwert ist (die kennt Blizzard schon). */
+  private collect(character: string, reports: Report[]) {
+    const since = this.since; // nichts von vor dem Verbinden posten
+    // Derselbe Run kann in mehreren Logs stehen (jeder aus der Gruppe lädt hoch) oder schon als Bestwert gepostet sein
+    const nearby = this.db.prepare('SELECT event FROM discord_posts WHERE character = ? AND at BETWEEN ? AND ?');
+    const insert = this.db.prepare('INSERT OR IGNORE INTO discord_posts (character, at, event, ref) VALUES (?, ?, ?, ?)');
+    for (const report of reports) {
+      for (const f of report.fights) {
+        if (f.keyLevel == null || f.keyTime == null) continue;
+        const at = report.start + f.end;
+        if (at < since) continue;
+        const best = (nearby.all(character, at - MATCH_MS, at + MATCH_MS) as { event: string }[])
+          .some((r) => { const e = JSON.parse(r.event) as Event; return e.kind === 'run' && e.run.key === f.keyLevel; });
+        if (best) continue; // schon gepostet, das Log wird dort ergänzt
+        const run: Run = { at, season: 0, dungeonId: f.encounterId, dungeon: f.name, key: f.keyLevel, ms: f.keyTime, limit: 0, result: f.keyBonus ? f.keyBonus : -1, rating: 0, affixes: [], members: [] };
+        insert.run(character, at, JSON.stringify({ kind: 'run', run, logged: true } satisfies Event), `${report.code}:${f.id}`);
+      }
+    }
   }
 
   /**
@@ -114,6 +155,7 @@ export class Discord {
     if (!this.connected || this.busy) return;
     this.busy = true;
     try {
+      this.collect(character, reports);
       const rows = this.db.prepare('SELECT id, at, event, message, log FROM discord_posts WHERE character = ? AND done = 0 ORDER BY at').all(character) as unknown as Row[];
       for (const row of rows) {
         const event = JSON.parse(row.event) as Event;
@@ -124,14 +166,21 @@ export class Discord {
           // Warcraft Logs gerade nicht erreichbar oder noch leer: beim nächsten Durchlauf erneut versuchen
           const players = await stats(found.code, found.fight).catch(() => []);
           if (players.length) log = { ...found.info, players };
-          else if (row.message && !stale) continue;
+          else if ((row.message || isLogged(event)) && !stale) continue;
+        }
+        // Ein Log von jemand anderem kann Runs ohne den eigenen Charakter enthalten: die nicht posten
+        if (isLogged(event) && !row.message && !log?.players.some((p) => p.name.toLowerCase() === me.toLowerCase())) {
+          this.db.prepare('UPDATE discord_posts SET done = 1 WHERE id = ?').run(row.id);
+          continue;
         }
         try {
           let message = row.message;
           if (!message) message = await this.send(buildPost(event, log, look, me));
           else if (log && !row.log) await this.edit(message, buildPost(event, log, look, me));
           const done = Boolean(log) || !look.logsEnabled || stale;
-          this.db.prepare('UPDATE discord_posts SET message = ?, log = ?, done = ? WHERE id = ?').run(message, log ? JSON.stringify(log) : null, Number(done), row.id);
+          // Hat announce() den Post inzwischen zum Bestwert umgeschrieben, nur die Nachrichten-ID behalten: der nächste Durchlauf bearbeitet ihn
+          const saved = this.db.prepare('UPDATE discord_posts SET message = ?, log = ?, done = ? WHERE id = ? AND event = ?').run(message, log ? JSON.stringify(log) : null, Number(done), row.id, row.event);
+          if (!saved.changes) this.db.prepare('UPDATE discord_posts SET message = ? WHERE id = ? AND message IS NULL').run(message, row.id);
         } catch (error) {
           console.warn('WowWatchr: Discord-Post fehlgeschlagen:', (error as Error).message);
           // Discord lehnt genau diesen Post ab (z. B. im Kanal gelöscht, neuer Webhook): aufgeben, die anderen nicht aufhalten
@@ -148,6 +197,8 @@ export class Discord {
     }
   }
 }
+
+const isLogged = (event: Event) => event.kind === 'run' && Boolean(event.logged);
 
 /** Sucht im Log den Kampf zum Run bzw. Kill, wie die Statistik-Seite: zeitlich am nächsten, bei Bossen mit gleichem Namen */
 export function findLog(event: Event, reports: Report[]): { code: string; fight: number; info: Omit<LogInfo, 'players'> } | null {

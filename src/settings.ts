@@ -8,7 +8,7 @@ const LAYOUTS = ['a', 'c', 'd'] as const;
 export const REGIONS = ['eu', 'us', 'kr', 'tw'] as const;
 export type Region = (typeof REGIONS)[number];
 export const GAMES = ['retail', 'forever'] as const;
-export const DISCORD_STYLES = ['table', 'tiles'] as const;
+export const DISCORD_STYLES = ['table', 'tiles', 'mix'] as const;
 
 export interface Settings {
   layout: (typeof LAYOUTS)[number];
@@ -21,7 +21,7 @@ export interface Settings {
   lang: Lang;
   accent: string;
   diffColors: boolean; // Schwierigkeiten in Grün/Blau/Lila statt in der Akzentfarbe
-  discordStyle: (typeof DISCORD_STYLES)[number]; // Tabelle als Text oder Kacheln als Bild
+  discordStyle: (typeof DISCORD_STYLES)[number]; // Tabelle als Text, Kacheln als Bild oder Mix (Bild mit Tabelle)
   discordLang: Lang; // Discord kann nicht übersetzen, also eine Sprache für den Kanal
 }
 
