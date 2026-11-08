@@ -22,7 +22,7 @@ export interface Run {
   result: number; // +1 bis +3, -1 = Zeit überschritten
   rating: number;
   affixes: Names[];
-  members: { name: string; spec: Names; ilvl: number }[];
+  members: { name: string; realm: Names; spec: Names; ilvl: number }[];
 }
 
 export interface Raid {

@@ -55,9 +55,13 @@ const PARTY = [
 ] as const;
 const LIMITS = [1_980_000, 1_680_000, 1_920_000, 2_100_000, 2_040_000];
 const DAY = 86_400_000;
+const RAID_NAME = loc('Beispielraid', 'Sample raid', 'Пример рейда', "Raid d'exemple");
+const boss = (n: number) => loc(`Boss ${n}`, `Boss ${n}`, `Босс ${n}`, `Boss ${n}`);
 
 export function demoHistory() {
   const now = Date.now();
+  // 20 Uhr vor ein paar Tagen, damit ein Raid-Abend nicht über Mitternacht geht
+  const evening = (days: number) => new Date(now - days * DAY).setHours(20, 0, 0, 0);
   const ms = (time: string) => time.split(':').reduce((m, part) => m * 60 + Number(part), 0) * 1000;
   return {
     demo: true,
@@ -71,15 +75,19 @@ export function demoHistory() {
       result: run.result,
       rating: 300 - i * 6.5 - (run.result < 0 ? 25 : 0),
       affixes: [AFFIXES[i % 2]],
-      members: PARTY.map(([name, spec, ilvl]) => ({ name, spec, ilvl: ilvl - i })),
+      members: PARTY.map(([name, spec, ilvl]) => ({ name, realm: 'Blackrock', spec, ilvl: ilvl - i })),
     })),
-    kills: [],
+    // Zwei Raid-Abende: Bosse, die zwischen zwei Abfragen gefallen sind
+    kills: [
+      ...[1, 2, 3].map((i) => ({ at: evening(1) + i * 1_800_000, raid: RAID_NAME, boss: boss(i), difficulty: 'mythic', count: 1 })),
+      ...[4, 5].map((i) => ({ at: evening(3) + i * 1_800_000, raid: RAID_NAME, boss: boss(i), difficulty: 'heroic', count: 1 })),
+    ],
     raids: [{
       id: 1,
-      name: loc('Beispielraid', 'Sample raid', 'Пример рейда', "Raid d'exemple"),
+      name: RAID_NAME,
       bosses: [9, 9, 9, 4, 4, 2].map((last, i) => ({
         id: i + 1,
-        name: loc(`Boss ${i + 1}`, `Boss ${i + 1}`, `Босс ${i + 1}`, `Boss ${i + 1}`),
+        name: boss(i + 1),
         kills: { normal: 3, heroic: 5 - Math.floor(i / 2), mythic: i < 4 ? 2 : 0 },
         last: now - last * 0.4 * DAY,
       })),

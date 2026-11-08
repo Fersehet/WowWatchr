@@ -150,6 +150,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
       affixes: (run.keystone_affixes ?? []).map((a: Json) => a.name ?? ''),
       members: await Promise.all((run.members ?? []).map(async (m: Json) => ({
         name: m.character?.name ?? '',
+        realm: (forever ? null : (await blizzard.cached(region, '/data/wow/realm/index'))?.realms?.find((r: Json) => r.slug === m.character?.realm?.slug)?.name) ?? m.character?.realm?.slug ?? '',
         spec: await specName(m.specialization),
         ilvl: m.equipped_item_level ?? 0,
       }))),

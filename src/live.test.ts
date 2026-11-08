@@ -24,7 +24,7 @@ const API: Record<string, unknown> = {
     best_runs: [
       { completed_timestamp: 1, duration: 1_400_000, keystone_level: 14, is_completed_within_time: true, dungeon: { id: 161, name: names('Skyreach', 'Himmelsnadel') },
         mythic_rating: { rating: 301.26 }, keystone_affixes: [{ name: names('Fortified', 'Verstärkt') }],
-        members: [{ character: { name: 'Vaelric' }, specialization: { id: 64, name: names('Frost', 'Frost') }, equipped_item_level: 284 }] },
+        members: [{ character: { name: 'Vaelric', realm: { slug: 'der-rat-von-dalaran' } }, specialization: { id: 64, name: names('Frost', 'Frost') }, equipped_item_level: 284 }] },
       { completed_timestamp: 3, duration: 1_901_000, keystone_level: 15, is_completed_within_time: false, dungeon: { id: 556, name: names('Pit of Saron', 'Grube von Saron') } },
     ],
   },
@@ -90,7 +90,7 @@ test('baut den Overlay-Zustand aus den Blizzard-Daten, auf Deutsch', async () =>
   assert.deepEqual(state.snapshot.runs[1], {
     at: 1, dungeonId: 161, dungeon: names('Skyreach', 'Himmelsnadel'), key: 14, ms: 1_400_000, limit: 1_800_000, result: 2, rating: 301.3,
     affixes: [names('Fortified', 'Verstärkt')],
-    members: [{ name: 'Vaelric', spec: { de_DE: 'Frost-Magier', en_US: 'Frost Mage', ru_RU: 'Mage «Frost»', fr_FR: 'Mage Frost' }, ilvl: 284 }],
+    members: [{ name: 'Vaelric', realm: names('Der Rat von Dalaran', 'Der Rat von Dalaran'), spec: { de_DE: 'Frost-Magier', en_US: 'Frost Mage', ru_RU: 'Mage «Frost»', fr_FR: 'Mage Frost' }, ilvl: 284 }],
   });
   assert.deepEqual(state.snapshot.raids.map((r) => r.bosses.length), [1, 2]);
   assert.equal(state.raid.bosses, 6);
