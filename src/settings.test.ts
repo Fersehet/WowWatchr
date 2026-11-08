@@ -30,3 +30,8 @@ test('übernimmt gültige Werte', () => {
   assert.equal(s.interval, 20);
   assert.deepEqual(s.pages, { character: true, mplus: true, raid: false });
 });
+
+test('Schwierigkeiten sind farbig, außer man schaltet es aus', () => {
+  assert.equal(sanitize({}).diffColors, true);
+  assert.equal(sanitize({ diffColors: false }).diffColors, false);
+});
