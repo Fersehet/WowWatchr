@@ -209,9 +209,7 @@ test('jeder Run aus Warcraft Logs seit dem Verbinden wird gepostet, ohne Bestwer
   ] };
   history.save('c', { runs: [], raids: [] });
   // Discord vor Kampf 2 verbunden
-  const { utimesSync } = await import('node:fs');
-  const t = (now - 600_000) / 1000;
-  utimesSync((discord as any).file, t, t);
+  history.db.prepare("UPDATE discord_meta SET value = ? WHERE key = 'since'").run(now - 600_000);
   const stats = async () => [{ name: 'Vaelric', dps: 400_000, hps: 5_000, deaths: 0, interrupts: 3, parse: 90 }];
   await discord.work('c', LOOK, 'Vaelric', [report], stats);
   assert.deepEqual(calls.map((c) => JSON.parse(c.body).embeds[0].title), ['Mythic+ run: Skyreach +12', 'Mythic+ run: Skyreach +14']);
@@ -231,4 +229,31 @@ test('Mix geht als Bild mit der ganzen Spielertabelle raus', () => {
   const players = [{ name: 'Vaelric', dps: 512_400, hps: 8_100, deaths: 1, interrupts: 4, parse: 96 }];
   const post = buildPost({ kind: 'run', run: run(1, 14) }, { tries: null, fightMs: 1, bestWipe: null, players }, { ...LOOK, style: 'mix' }, 'Vaelric');
   assert.ok(post.image && post.image.subarray(1, 4).toString() === 'PNG');
+});
+
+test('derselbe Run in zwei Logs wird nur einmal gepostet, Runs ohne den eigenen Charakter gar nicht', async () => {
+  const { history, discord, calls } = setup();
+  const now = Date.now();
+  history.db.prepare("UPDATE discord_meta SET value = ? WHERE key = 'since'").run(now - 3_600_000);
+  const report = (code: string, fights: [number, number][]): Report => ({ code, title: '', start: now - 3_000_000, end: now, zone: '', fights: fights.map(([id, key]) => (
+    { id, name: 'Skyreach', encounterId: 161, start: 0, end: 2_900_000 - id * 1_000, kill: true, difficulty: 10, percent: 0, keyLevel: key, keyTime: 1_500_000, keyBonus: 1 })) });
+  const a = report('AAAAAAAAAAAAAAAA', [[1, 12]]);
+  const b = report('BBBBBBBBBBBBBBBB', [[7, 12]]);
+  // Ein Kamerad hat im selben Log auch einen Run ohne mich (andere Key-Stufe)
+  const c = report('CCCCCCCCCCCCCCCC', [[9, 18]]);
+  const stats = async (code: string) => code === 'CCCCCCCCCCCCCCCC'
+    ? [{ name: 'Someone', dps: 1, hps: 1, deaths: 0, interrupts: 0, parse: 50 }]
+    : [{ name: 'vaelric', dps: 400_000, hps: 5_000, deaths: 0, interrupts: 3, parse: 90 }];
+  await discord.work('c', LOOK, 'Vaelric', [a, b, c], stats);
+  await discord.work('c', LOOK, 'Vaelric', [a, b, c], stats);
+  assert.deepEqual(calls.map((x) => JSON.parse(x.body).embeds[0].title), ['Mythic+ run: Skyreach +12']);
+});
+
+test('ohne Verbinden nach dem Update werden alte Runs aus Logs nicht nachgeholt', async () => {
+  const { history, discord, calls } = setup();
+  const old = Date.now() - 7 * 86_400_000;
+  const report: Report = { code: 'AbCdEfGhIjKlMnOp', title: '', start: old, end: old + 3_000_000, zone: '', fights: [
+    { id: 1, name: 'Skyreach', encounterId: 161, start: 0, end: 2_000_000, kill: true, difficulty: 10, percent: 0, keyLevel: 12, keyTime: 1_500_000, keyBonus: 1 }] };
+  await discord.work('c', LOOK, 'Vaelric', [report], async () => [{ name: 'Vaelric', dps: 1, hps: 1, deaths: 0, interrupts: 0, parse: 1 }]);
+  assert.equal(calls.length, 0);
 });
