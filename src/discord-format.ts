@@ -174,13 +174,14 @@ function table(event: Event, log: LogInfo | null, look: Look, me: string): Post 
   const lines = [f.line];
   if (log?.players.length) {
     const rows = top(log.players, me).map((p) =>
-      `${pad(p.name, 12)} ${pad(short(p.dps, look.lang), 6, true)} ${pad(short(p.hps, look.lang), 6, true)} ${pad(String(p.deaths), 3, true)} ${pad(String(p.interrupts), 3, true)} ${pad(p.parse == null ? '–' : String(p.parse), 3, true)}`);
-    const head = `${pad(t.player, 12)} ${pad(t.dps, 6, true)} ${pad(t.hps, 6, true)} ${pad(t.dth, 3, true)} ${pad(t.int, 3, true)} ${pad(t.prs, 3, true)}`;
+      `${pad(p.name, 10)} ${pad(short(p.dps, look.lang), 5, true)} ${pad(short(p.hps, look.lang), 5, true)} ${pad(String(p.deaths), 3, true)} ${pad(String(p.interrupts), 3, true)} ${pad(p.parse == null ? '–' : String(p.parse), 3, true)}`);
+    // Schmal genug, dass Discord am Handy keine Zeile umbricht
+    const head = `${pad(t.player, 10)} ${pad(t.dps, 5, true)} ${pad(t.hps, 5, true)} ${pad(t.dth, 3, true)} ${pad(t.int, 3, true)} ${pad(t.prs, 3, true)}`;
     lines.push('```', head, ...rows, '```');
     if (log.players.length > 5) lines.push(fill(t.more, { n: log.players.length }));
     lines.push(highlights(log.players, look).map((h) => `${h.k}: **${h.v}**`).join(' · '));
   } else if (f.group.length) {
-    lines.push('```', ...f.group.map((m) => `${pad(m.name, 12)} ${pad(m.spec, 30)} ${pad(String(m.ilvl), 3, true)}`), '```');
+    lines.push('```', ...f.group.map((m) => `${pad(m.name, 10)} ${pad(m.spec, 19)} ${pad(String(m.ilvl), 3, true)}`), '```');
   }
   if (!log && look.logsEnabled) lines.push(`*${t.statsLater}*`);
   return {
@@ -240,7 +241,6 @@ export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: stri
   if (log?.players.length && look.style === 'mix') {
     // Mix: Kachel-Look, aber alle Werte der Tabelle
     const list = top(log.players, me);
-    const max = Math.max(1, ...list.map((p) => p.dps));
     const cols = [
       { k: t.dps, x: P + 380, v: (p: PlayerStats) => short(p.dps, look.lang) },
       { k: t.hps, x: P + 480, v: (p: PlayerStats) => short(p.hps, look.lang) },
@@ -253,16 +253,15 @@ export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: stri
     y += 26;
     list.forEach((p, i) => {
       const mine = p.name === me;
-      if (i % 2 === 0) out.push(`<rect x="${P}" y="${y}" width="${W - 2 * P}" height="40" rx="6" fill="#151820"/>`);
-      // Schmaler Balken unten: Anteil am Schaden des Besten
-      out.push(`<rect x="${P + 14}" y="${y + 33}" width="${Math.max(4, Math.round((250 * p.dps) / max))}" height="3" rx="1.5" fill="${mine ? f.color : '#4e5058'}"/>`);
-      text(P + 14, y + 25, fit(p.name, 16, 220), 16, mine ? f.color : '#e6e6ea', 600);
+      // Jede Zeile gleich: eine Fläche, alle Werte auf einer Linie
+      out.push(`<rect x="${P}" y="${y}" width="${W - 2 * P}" height="40" rx="6" fill="${mine ? '#1b1f28' : '#151820'}"/>`);
+      text(P + 14, y + 26, fit(p.name, 16, 220), 16, mine ? f.color : '#e6e6ea', 600);
       for (const c of cols) {
         const value = c.v(p);
         const color = c.k === t.prs ? parseColor(p.parse) : c.k === t.dth && p.deaths ? RED : '#ffffff';
-        text(c.x - 14, y + 25, value, 16, color, 700, 'end');
+        text(c.x - 14, y + 26, value, 16, color, 700, 'end');
       }
-      y += 40;
+      y += 46;
     });
     y += 10;
     if (log.players.length > 5) {
