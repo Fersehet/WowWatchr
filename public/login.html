@@ -72,7 +72,7 @@
 
       // Nur Pfade auf diesem Server als Ziel zulassen
       let next = params.get('next') || '';
-      if (!/^\/(?![\/\\])/.test(next)) next = '/';
+      if (!/^\/(?![\/\\])/.test(next)) next = '/editor.html';
       // Mit der hier gewählten Sprache weiter
       const go = () => {
         const url = new URL(next, location.origin);
