@@ -3,7 +3,8 @@ import type { Request, Response } from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Auth, type LoginError } from './auth.ts';
-import { demoState } from './demo.ts';
+import { demoHistory, demoState } from './demo.ts';
+import { History } from './history.ts';
 import { Blizzard, Live } from './live.ts';
 import { DEFAULTS, loadSettings, sanitize, saveSettings } from './settings.ts';
 
@@ -28,7 +29,8 @@ const notify = () => {
 };
 // Echte Daten nur mit Blizzard-Schlüssel, sonst Beispieldaten
 const blizzard = new Blizzard(process.env.BLIZZARD_CLIENT_ID?.trim() || '', process.env.BLIZZARD_CLIENT_SECRET?.trim() || '');
-const live = new Live(blizzard, notify);
+const history = new History(join(DATA, 'history.db'));
+const live = new Live(blizzard, notify, (character, snapshot) => history.save(character, snapshot));
 const wantsLive = () => blizzard.enabled && Boolean(settings.name.trim());
 
 const app = express();
@@ -119,6 +121,14 @@ app.get('/api/state', (_req, res) => {
   if (live.state) return void res.json({ ...live.state, status: live.status });
   // Noch keine echten Daten: Beispieldaten nicht unter dem echten Namen zeigen
   res.json({ ...demoState({ ...settings, name: DEFAULTS.name, realm: DEFAULTS.realm }), status: live.status });
+});
+
+// Statistik-Seite im Editor: gespeicherter Verlauf, ohne Schlüssel Beispieldaten
+app.get('/api/stats', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!wantsLive()) return void res.json({ ...demoHistory(), status: blizzard.enabled ? 'demo' : 'noKey' });
+  live.refresh(settings);
+  res.json({ demo: false, ...history.get(Live.character(settings)), status: live.status });
 });
 
 // Änderungen im Editor erscheinen sofort in OBS
