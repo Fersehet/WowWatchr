@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
 import { buildPost, pick, type Event, type LogInfo, type Look, type Post } from './discord-format.ts';
@@ -46,6 +46,10 @@ export class Discord {
         done INTEGER NOT NULL DEFAULT 0
       );
     `);
+    // ref = Kampf im Log (code:fight) bei Runs aus Warcraft Logs, damit jeder nur einmal gepostet wird
+    const columns = db.prepare('PRAGMA table_info(discord_posts)').all() as { name: string }[];
+    if (!columns.some((c) => c.name === 'ref')) db.exec('ALTER TABLE discord_posts ADD COLUMN ref TEXT');
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_discord_ref ON discord_posts (ref)');
   }
 
   get url() {
@@ -101,9 +105,37 @@ export class Discord {
   async announce(character: string, fresh: { runs: Run[]; kills: NewKill[] }, look: Look, me: string) {
     if (!this.connected) return;
     const insert = this.db.prepare('INSERT INTO discord_posts (character, at, event) VALUES (?, ?, ?)');
-    for (const run of fresh.runs) insert.run(character, run.at, JSON.stringify({ kind: 'run', run } satisfies Event));
+    // Gibt es den Run schon als Post aus Warcraft Logs, wird dieser Post zum Bestwert umgeschrieben statt doppelt gepostet
+    const logged = this.db.prepare('SELECT id, event FROM discord_posts WHERE character = ? AND ref IS NOT NULL AND at BETWEEN ? AND ?');
+    const upgrade = this.db.prepare('UPDATE discord_posts SET event = ?, log = NULL, done = 0 WHERE id = ?');
+    for (const run of fresh.runs) {
+      const event = JSON.stringify({ kind: 'run', run } satisfies Event);
+      const twin = (logged.all(character, run.at - MATCH_MS, run.at + MATCH_MS) as { id: number; event: string }[])
+        .find((r) => (JSON.parse(r.event) as Event).kind === 'run' && (JSON.parse(r.event) as { run: Run }).run.key === run.key);
+      if (twin) upgrade.run(event, twin.id);
+      else insert.run(character, run.at, event);
+    }
     for (const { killed, total, ...kill } of fresh.kills) insert.run(character, kill.at, JSON.stringify({ kind: 'kill', kill, killed, total } satisfies Event));
     await this.work(character, look, me, [], async () => []);
+  }
+
+  /** Jeder Dungeon aus Warcraft Logs seit dem Verbinden wird ein Post, auch wenn er kein Bestwert ist (die kennt Blizzard schon). */
+  private collect(character: string, reports: Report[]) {
+    const since = statSync(this.file).mtimeMs; // nichts von vor dem Verbinden posten
+    const nearby = this.db.prepare('SELECT event FROM discord_posts WHERE character = ? AND ref IS NULL AND at BETWEEN ? AND ?');
+    const insert = this.db.prepare('INSERT OR IGNORE INTO discord_posts (character, at, event, ref) VALUES (?, ?, ?, ?)');
+    for (const report of reports) {
+      for (const f of report.fights) {
+        if (f.keyLevel == null || f.keyTime == null) continue;
+        const at = report.start + f.end;
+        if (at < since) continue;
+        const best = (nearby.all(character, at - MATCH_MS, at + MATCH_MS) as { event: string }[])
+          .some((r) => { const e = JSON.parse(r.event) as Event; return e.kind === 'run' && e.run.key === f.keyLevel; });
+        if (best) continue; // schon als Bestwert von Blizzard gepostet, das Log wird dort ergänzt
+        const run: Run = { at, season: 0, dungeonId: f.encounterId, dungeon: f.name, key: f.keyLevel, ms: f.keyTime, limit: 0, result: f.keyBonus ? f.keyBonus : -1, rating: 0, affixes: [], members: [] };
+        insert.run(character, at, JSON.stringify({ kind: 'run', run, logged: true } satisfies Event), `${report.code}:${f.id}`);
+      }
+    }
   }
 
   /**
@@ -114,6 +146,7 @@ export class Discord {
     if (!this.connected || this.busy) return;
     this.busy = true;
     try {
+      this.collect(character, reports);
       const rows = this.db.prepare('SELECT id, at, event, message, log FROM discord_posts WHERE character = ? AND done = 0 ORDER BY at').all(character) as unknown as Row[];
       for (const row of rows) {
         const event = JSON.parse(row.event) as Event;

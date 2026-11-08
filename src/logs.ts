@@ -248,7 +248,10 @@ export class Logs {
     if (cached) return JSON.parse(cached.data);
     const report = (await this.wcl.query(STATS, { code, fights: [fight] }))?.reportData?.report;
     const stats = report ? playerStats(report) : [];
-    const final = this.db.prepare('SELECT 1 FROM logs WHERE code = ? AND final = 1').get(code);
+    // Abgeschlossene Logs, und fertige Runs und Kills auch in noch wachsenden Logs, ändern sich nicht mehr: auf dem Server behalten
+    const row = this.db.prepare('SELECT final, data FROM logs WHERE code = ?').get(code) as { final: number; data: string } | undefined;
+    const f = row ? (JSON.parse(row.data) as Report).fights.find((x) => x.id === fight) : undefined;
+    const final = row?.final || f?.keyTime != null || f?.kill;
     if (final && stats.length) this.db.prepare('INSERT OR REPLACE INTO fight_stats (code, fight, data) VALUES (?, ?, ?)').run(code, fight, JSON.stringify(stats));
     return stats;
   }

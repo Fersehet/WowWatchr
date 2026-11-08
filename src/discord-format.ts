@@ -5,14 +5,14 @@ import type { PlayerStats } from './logs.ts';
 import type { Lang } from './settings.ts';
 
 /**
- * Aussehen der Discord-Posts: „Tabelle“ als Text (Code-Block) oder „Kacheln“ als Bild.
+ * Aussehen der Discord-Posts: „Tabelle“ als Text (Code-Block), „Kacheln“ als Bild oder „Mix“: Bild mit der ganzen Spielertabelle.
  * Ein Post pro neuem Bestwert im Dungeon oder pro Boss-Kill; mit Warcraft Logs kommen Spielerwerte dazu.
  */
 
-export type Style = 'table' | 'tiles';
+export type Style = 'table' | 'tiles' | 'mix';
 
 export type Event =
-  | { kind: 'run'; run: Run }
+  | { kind: 'run'; run: Run; logged?: boolean } // logged = nicht von Blizzard, sondern aus Warcraft Logs (jeder Run, nicht nur Bestwerte)
   | { kind: 'kill'; kill: Kill; killed: number; total: number };
 
 /** Was Warcraft Logs zu einem Run oder Kill weiß */
@@ -44,7 +44,7 @@ const RED = '#ff5a5a';
 
 export const TEXTS: Record<Lang, Record<string, any>> = {
   de: {
-    newBest: 'Neuer Bestwert', timed: 'In der Zeit +{n}', overTime: 'Zeit überschritten', killed: '{boss} besiegt',
+    result: 'Ergebnis', interrupts: 'Unterbrechungen', newBest: 'Neuer Bestwert', run: 'Mythisch+-Run', timed: 'In der Zeit +{n}', overTime: 'Zeit überschritten', killed: '{boss} besiegt',
     time: 'Zeit', toSpare: 'Reserve', over: 'Drüber', runRating: 'Run-Wertung', affixes: 'Affixe', ilvl: 'Itemlevel', group: 'Gruppe',
     dps: 'DPS', hps: 'HPS', player: 'Spieler', dth: 'Tod', int: 'Unt', prs: 'Prs', tries: 'Versuche', fight: 'Kampf', bestWipe: 'Bester Wipe', progress: 'Fortschritt',
     topHps: 'Top-HPS', mostInt: 'Meiste Unterbrechungen', deaths: 'Tode', more: '{n} Spieler · die besten 5 hier, alle im Log',
@@ -53,7 +53,7 @@ export const TEXTS: Record<Lang, Record<string, any>> = {
     diff: { normal: 'Normal', heroic: 'Heroisch', mythic: 'Mythisch' },
   },
   en: {
-    newBest: 'New best run', timed: 'Timed +{n}', overTime: 'Over time', killed: '{boss} killed',
+    result: 'Result', interrupts: 'Interrupts', newBest: 'New best run', run: 'Mythic+ run', timed: 'Timed +{n}', overTime: 'Over time', killed: '{boss} killed',
     time: 'Time', toSpare: 'To spare', over: 'Over', runRating: 'Run rating', affixes: 'Affixes', ilvl: 'Item level', group: 'Group',
     dps: 'DPS', hps: 'HPS', player: 'Player', dth: 'Dth', int: 'Int', prs: 'Prs', tries: 'Tries', fight: 'Fight', bestWipe: 'Best wipe', progress: 'Progress',
     topHps: 'Top HPS', mostInt: 'Most interrupts', deaths: 'Deaths', more: '{n} players · top 5 shown, all in the log',
@@ -62,7 +62,7 @@ export const TEXTS: Record<Lang, Record<string, any>> = {
     diff: { normal: 'Normal', heroic: 'Heroic', mythic: 'Mythic' },
   },
   ru: {
-    newBest: 'Новый рекорд', timed: 'В срок +{n}', overTime: 'Время вышло', killed: '{boss} побеждён',
+    result: 'Итог', interrupts: 'Прерывания', newBest: 'Новый рекорд', run: 'Забег М+', timed: 'В срок +{n}', overTime: 'Время вышло', killed: '{boss} побеждён',
     time: 'Время', toSpare: 'Запас', over: 'Сверх', runRating: 'Рейтинг забега', affixes: 'Модификаторы', ilvl: 'Ур. предметов', group: 'Группа',
     dps: 'УВС', hps: 'ИВС', player: 'Игрок', dth: 'Смр', int: 'Прр', prs: 'Прс', tries: 'Попытки', fight: 'Бой', bestWipe: 'Лучший вайп', progress: 'Прогресс',
     topHps: 'Лучший ИВС', mostInt: 'Больше всего прерываний', deaths: 'Смерти', more: '{n} игроков · здесь лучшие 5, все в логе',
@@ -71,7 +71,7 @@ export const TEXTS: Record<Lang, Record<string, any>> = {
     diff: { normal: 'Обычный', heroic: 'Героический', mythic: 'Эпохальный' },
   },
   fr: {
-    newBest: 'Nouveau record', timed: 'Dans les temps +{n}', overTime: 'Temps dépassé', killed: '{boss} vaincu',
+    result: 'Résultat', interrupts: 'Interruptions', newBest: 'Nouveau record', run: 'Donjon M+', timed: 'Dans les temps +{n}', overTime: 'Temps dépassé', killed: '{boss} vaincu',
     time: 'Temps', toSpare: 'Avance', over: 'Retard', runRating: 'Score du donjon', affixes: 'Affixes', ilvl: "Niveau d'objet", group: 'Groupe',
     dps: 'DPS', hps: 'HPS', player: 'Joueur', dth: 'Mrt', int: 'Int', prs: 'Prs', tries: 'Essais', fight: 'Combat', bestWipe: 'Meilleur wipe', progress: 'Progression',
     topHps: 'Meilleur HPS', mostInt: "Plus d'interruptions", deaths: 'Morts', more: '{n} joueurs · les 5 meilleurs ici, tous dans le log',
@@ -97,17 +97,27 @@ function facts(event: Event, log: LogInfo | null, look: Look) {
     const { run } = event;
     const timed = run.result > 0;
     const spare = run.limit - run.ms;
+    // Runs aus Warcraft Logs kennen kein Zeitlimit und keine Wertung
+    const limit = run.limit > 0;
+    const rating = run.rating > 0 ? Math.round(run.rating).toLocaleString(NUM_LOCALES[look.lang]) : '–';
+    const affixes = run.affixes.map((a) => pick(a, look.lang)).join(', ');
     return {
       color: timed ? look.accent : RED,
-      title: `${t.newBest}: ${pick(run.dungeon, look.lang)} +${run.key}`,
+      title: `${event.logged ? t.run : t.newBest}: ${pick(run.dungeon, look.lang)} +${run.key}`,
       result: timed ? fill(t.timed, { n: run.result }) : t.overTime,
-      tiles: [
+      tiles: event.logged ? [
+        // Aus dem Log: statt Limit und Wertung (die kennt nur Blizzard) Ergebnis, Tode und Unterbrechungen der Gruppe
         { k: t.time, v: mmss(run.ms) },
-        { k: spare >= 0 ? t.toSpare : t.over, v: mmss(spare) },
-        { k: t.runRating, v: Math.round(run.rating).toLocaleString(NUM_LOCALES[look.lang]) },
-        { k: t.affixes, v: run.affixes.map((a) => pick(a, look.lang)).join(', ') || '–' },
+        { k: t.result, v: timed ? `+${run.result}` : '–' },
+        { k: t.deaths, v: log ? String(log.players.reduce((n, p) => n + p.deaths, 0)) : '–' },
+        { k: t.interrupts, v: log ? String(log.players.reduce((n, p) => n + p.interrupts, 0)) : '–' },
+      ] : [
+        { k: t.time, v: mmss(run.ms) },
+        { k: !limit || spare >= 0 ? t.toSpare : t.over, v: limit ? mmss(spare) : '–' },
+        { k: t.runRating, v: rating },
+        { k: t.affixes, v: affixes || '–' },
       ],
-      line: `${timed ? fill(t.timed, { n: run.result }) : t.overTime} · ${mmss(run.ms)} / ${mmss(run.limit)} · ${t.runRating} ${Math.round(run.rating)}${run.affixes.length ? ` · ${run.affixes.map((a) => pick(a, look.lang)).join(', ')}` : ''}`,
+      line: [timed ? fill(t.timed, { n: run.result }) : t.overTime, limit ? `${mmss(run.ms)} / ${mmss(run.limit)}` : mmss(run.ms), run.rating > 0 ? `${t.runRating} ${rating}` : '', affixes].filter(Boolean).join(' · '),
       group: run.members.map((m) => ({ name: m.name, spec: pick(m.spec, look.lang), ilvl: m.ilvl })),
     };
   }
@@ -199,6 +209,10 @@ const fit = (s: string, size: number, width: number) => {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 };
 
+// Farben wie bei Warcraft Logs
+const parseColor = (p: number | null) =>
+  p == null ? '#8b90a0' : p >= 100 ? '#e5cc80' : p >= 99 ? '#e268a8' : p >= 95 ? '#ff8000' : p >= 75 ? '#a335ee' : p >= 50 ? '#0070ff' : p >= 25 ? '#1eff00' : '#9d9d9d';
+
 export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: string) {
   const t = TEXTS[look.lang];
   const f = facts(event, log, look);
@@ -223,7 +237,48 @@ export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: stri
   });
   y += 78 + 28;
 
-  if (log?.players.length) {
+  if (log?.players.length && look.style === 'mix') {
+    // Mix: Kachel-Look, aber alle Werte der Tabelle
+    const list = top(log.players, me);
+    const max = Math.max(1, ...list.map((p) => p.dps));
+    const cols = [
+      { k: t.dps, x: P + 380, v: (p: PlayerStats) => short(p.dps, look.lang) },
+      { k: t.hps, x: P + 480, v: (p: PlayerStats) => short(p.hps, look.lang) },
+      { k: t.dth, x: P + 560, v: (p: PlayerStats) => String(p.deaths) },
+      { k: t.int, x: P + 640, v: (p: PlayerStats) => String(p.interrupts) },
+      { k: t.prs, x: W - P, v: (p: PlayerStats) => (p.parse == null ? '–' : String(p.parse)) },
+    ];
+    text(P + 14, y + 14, t.player.toUpperCase(), 12, '#8b90a0', 600);
+    for (const c of cols) text(c.x - 14, y + 14, c.k.toUpperCase(), 12, '#8b90a0', 600, 'end');
+    y += 26;
+    list.forEach((p, i) => {
+      const mine = p.name === me;
+      if (i % 2 === 0) out.push(`<rect x="${P}" y="${y}" width="${W - 2 * P}" height="40" rx="6" fill="#151820"/>`);
+      // Schmaler Balken unten: Anteil am Schaden des Besten
+      out.push(`<rect x="${P + 14}" y="${y + 33}" width="${Math.max(4, Math.round((250 * p.dps) / max))}" height="3" rx="1.5" fill="${mine ? f.color : '#4e5058'}"/>`);
+      text(P + 14, y + 25, fit(p.name, 16, 220), 16, mine ? f.color : '#e6e6ea', 600);
+      for (const c of cols) {
+        const value = c.v(p);
+        const color = c.k === t.prs ? parseColor(p.parse) : c.k === t.dth && p.deaths ? RED : '#ffffff';
+        text(c.x - 14, y + 25, value, 16, color, 700, 'end');
+      }
+      y += 40;
+    });
+    y += 10;
+    if (log.players.length > 5) {
+      text(P, y + 12, fill(t.more, { n: log.players.length }), 13, '#8b90a0');
+      y += 26;
+    }
+    let x = P;
+    for (const h of highlights(log.players, look)) {
+      const label = `${h.k}: ${h.v}`;
+      const w = Math.min(W - P - x, label.length * 8 + 28);
+      out.push(`<rect x="${x}" y="${y}" width="${w}" height="30" rx="15" fill="#191c23"/>`);
+      text(x + 14, y + 20, fit(label, 14, w - 28), 14, '#e6e6ea', 600);
+      x += w + 10;
+    }
+    y += 30 + 24;
+  } else if (log?.players.length) {
     const list = top(log.players, me);
     const max = Math.max(1, ...list.map((p) => p.dps));
     for (const p of list) {
@@ -288,5 +343,5 @@ function tiles(event: Event, log: LogInfo | null, look: Look, me: string): Post 
 
 /** Baut den Post im gewählten Stil. `me` = Name des eigenen Charakters (wird hervorgehoben). */
 export function buildPost(event: Event, log: LogInfo | null, look: Look, me: string): Post {
-  return look.style === 'tiles' ? tiles(event, log, look, me) : table(event, log, look, me);
+  return look.style === 'table' ? table(event, log, look, me) : tiles(event, log, look, me);
 }
