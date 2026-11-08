@@ -88,6 +88,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   const name = settings.name.trim().toLowerCase();
   const wanted = settings.realm.trim().toLowerCase();
   let path: string;
+  let realmSlug = slug(wanted);
   if (forever) {
     path = `/profile/wow/character/${encodeURIComponent(`${name}-${slug(wanted)}`)}`;
   } else {
@@ -95,6 +96,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
     const realms = await blizzard.cached(region, '/data/wow/realm/index');
     const realm = realms?.realms?.find((r: Json) => r.slug === slug(wanted) || Object.values(r.name ?? {}).some((n) => String(n).toLowerCase() === wanted))?.slug ?? slug(wanted);
     path = `/profile/wow/character/${realm}/${encodeURIComponent(name)}`;
+    realmSlug = realm;
   }
   const profile = await blizzard.get(region, path, ns('profile'));
   if (!profile) return null;
@@ -174,6 +176,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
 
   return {
     snapshot,
+    realmSlug,
     demo: false,
     character: {
       name: profile.surname ? `${profile.name} ${tr(profile.surname)}` : profile.name,
@@ -222,7 +225,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   };
 }
 
-export type LiveState = Omit<NonNullable<Awaited<ReturnType<typeof fetchLive>>>, 'snapshot'>;
+export type LiveState = Omit<NonNullable<Awaited<ReturnType<typeof fetchLive>>>, 'snapshot' | 'realmSlug'>;
 
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -230,6 +233,8 @@ const REFRESH_MS = 5 * 60 * 1000;
 export class Live {
   state: LiveState | null = null;
   status: Status = 'loading';
+  /** Realm als Slug, wie Blizzard ihn kennt; Warcraft Logs nutzt denselben */
+  realmSlug = '';
   private key = '';
   private at = 0;
   private running: Promise<void> | null = null;
@@ -249,14 +254,16 @@ export class Live {
       // Anderer Charakter: alte Daten nicht mehr zeigen
       this.state = null;
       this.status = 'loading';
+      this.realmSlug = '';
     }
     this.key = key;
     this.at = Date.now();
     this.running = fetchLive(settings, this.blizzard)
       .then((result) => {
         if (result) {
-          const { snapshot, ...state } = result;
+          const { snapshot, realmSlug, ...state } = result;
           this.state = state;
+          this.realmSlug = realmSlug;
           this.onSnapshot(Live.character(settings), snapshot);
         } else this.state = null;
         this.status = result ? 'live' : 'notFound';

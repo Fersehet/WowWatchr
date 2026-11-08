@@ -4,6 +4,9 @@ export const LANGS = ['de', 'en', 'ru', 'fr'];
 export const TEXTS = {
   de: {
     design: 'Design',
+    stLogs: 'Warcraft Logs', stLogsError: 'Warcraft Logs gerade nicht erreichbar.', stNoLogStats: 'Keine Spielerwerte in diesem Log.',
+    stPlayer: 'Spieler', stDeaths: 'Tode', stInterrupts: 'Unterbrechungen', stParse: 'Parse', stRaidLength: 'Raid-Dauer', stTries: 'Versuche', stWipes: 'Wipes',
+    stDifficulty: 'Schwierigkeit', stBestTry: 'Bester Versuch', stKillTime: 'Kill-Zeit', stTimeOnBoss: 'Zeit am Boss', stKilled: 'Besiegt', stKill: 'Kill', stLastTry: 'Letzter Versuch',
     tabOverlay: 'Overlay', tabStats: 'Statistiken', aViews: 'Ansichten',
     stMplusHead: 'M+-Wertung · beste Runs', stAvgKey: 'Ø Key', stChartNote: 'Ein Balken pro Dungeon: Wertung deines besten Runs. Rot = Zeit überschritten.',
     stSeason: 'Aktuelle Saison', stTimed: 'Dungeons in der Zeit', stRaidProgress: 'Raid-Fortschritt', stBossKills: 'Boss-Kills',
@@ -34,6 +37,9 @@ export const TEXTS = {
   },
   en: {
     design: 'Design',
+    stLogs: 'Warcraft Logs', stLogsError: "Warcraft Logs can't be reached right now.", stNoLogStats: 'No player stats in this log.',
+    stPlayer: 'Player', stDeaths: 'Deaths', stInterrupts: 'Interrupts', stParse: 'Parse', stRaidLength: 'Raid length', stTries: 'Tries', stWipes: 'Wipes',
+    stDifficulty: 'Difficulty', stBestTry: 'Best try', stKillTime: 'Kill time', stTimeOnBoss: 'Time on boss', stKilled: 'Killed', stKill: 'Kill', stLastTry: 'Last try',
     tabOverlay: 'Overlay', tabStats: 'Statistics', aViews: 'Views',
     stMplusHead: 'M+ rating · best runs', stAvgKey: 'Avg key', stChartNote: 'One bar per dungeon: rating of your best run. Red = over time.',
     stSeason: 'Current season', stTimed: 'Dungeons in time', stRaidProgress: 'Raid progress', stBossKills: 'Boss kills',
@@ -64,6 +70,9 @@ export const TEXTS = {
   },
   ru: {
     design: 'Оформление',
+    stLogs: 'Warcraft Logs', stLogsError: 'Warcraft Logs сейчас недоступен.', stNoLogStats: 'В этом логе нет данных игроков.',
+    stPlayer: 'Игрок', stDeaths: 'Смерти', stInterrupts: 'Прерывания', stParse: 'Парс', stRaidLength: 'Длительность рейда', stTries: 'Попытки', stWipes: 'Вайпы',
+    stDifficulty: 'Сложность', stBestTry: 'Лучшая попытка', stKillTime: 'Время убийства', stTimeOnBoss: 'Время на боссе', stKilled: 'Убит', stKill: 'Убийство', stLastTry: 'Последняя попытка',
     tabOverlay: 'Оверлей', tabStats: 'Статистика', aViews: 'Разделы',
     stMplusHead: 'Рейтинг М+ · лучшие забеги', stAvgKey: 'Ср. ключ', stChartNote: 'Один столбец на подземелье: рейтинг лучшего забега. Красный = не уложились во время.',
     stSeason: 'Текущий сезон', stTimed: 'Подземелий в срок', stRaidProgress: 'Прогресс в рейде', stBossKills: 'Убийства боссов',
@@ -94,6 +103,9 @@ export const TEXTS = {
   },
   fr: {
     design: 'Apparence',
+    stLogs: 'Warcraft Logs', stLogsError: 'Warcraft Logs est injoignable pour le moment.', stNoLogStats: 'Aucune donnée de joueur dans ce log.',
+    stPlayer: 'Joueur', stDeaths: 'Morts', stInterrupts: 'Interruptions', stParse: 'Parse', stRaidLength: 'Durée du raid', stTries: 'Essais', stWipes: 'Wipes',
+    stDifficulty: 'Difficulté', stBestTry: 'Meilleur essai', stKillTime: 'Temps du kill', stTimeOnBoss: 'Temps sur le boss', stKilled: 'Vaincu', stKill: 'Kill', stLastTry: 'Dernier essai',
     tabOverlay: 'Overlay', tabStats: 'Statistiques', aViews: 'Vues',
     stMplusHead: 'Score M+ · meilleures clés', stAvgKey: 'Clé moy.', stChartNote: 'Une barre par donjon : score de ta meilleure clé. Rouge = hors temps.',
     stSeason: 'Saison actuelle', stTimed: 'Donjons dans les temps', stRaidProgress: 'Progression du raid', stBossKills: 'Boss vaincus',

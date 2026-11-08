@@ -3,9 +3,10 @@ import type { Request, Response } from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Auth, type LoginError } from './auth.ts';
-import { demoHistory, demoState } from './demo.ts';
+import { DEMO_CODE, demoFight, demoHistory, demoState } from './demo.ts';
 import { History } from './history.ts';
-import { Blizzard, Live } from './live.ts';
+import { Blizzard, Live, slug } from './live.ts';
+import { Logs, WarcraftLogs } from './logs.ts';
 import { DEFAULTS, loadSettings, sanitize, saveSettings } from './settings.ts';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -32,6 +33,12 @@ const blizzard = new Blizzard(process.env.BLIZZARD_CLIENT_ID?.trim() || '', proc
 const history = new History(join(DATA, 'history.db'));
 const live = new Live(blizzard, notify, (character, snapshot) => history.save(character, snapshot));
 const wantsLive = () => blizzard.enabled && Boolean(settings.name.trim());
+// Warcraft Logs nur mit eigenem Schlüssel und nur für Retail (Forever-Logs liegen woanders)
+const logs = new Logs(new WarcraftLogs(process.env.WCL_CLIENT_ID?.trim() || '', process.env.WCL_CLIENT_SECRET?.trim() || ''), history.db);
+const refreshLogs = () => {
+  if (settings.game !== 'retail' || !settings.name.trim()) return;
+  logs.refresh(Live.character(settings), { name: settings.name.trim(), realm: live.realmSlug || slug(settings.realm), region: settings.region });
+};
 
 const app = express();
 // Hinter einem Reverse Proxy: echte Besucher-IP (für die Login-Sperre) und https-Erkennung (für sichere Cookies)
@@ -112,7 +119,10 @@ app.put('/api/settings', (req, res) => {
 });
 
 // Auch ohne offenen Editor alle paar Minuten neu holen; Live fragt höchstens alle fünf Minuten an
-setInterval(() => wantsLive() && live.refresh(settings), 60_000);
+setInterval(() => {
+  if (wantsLive()) live.refresh(settings);
+  if (wantsLive()) refreshLogs();
+}, 60_000);
 
 // Echte Daten, sobald ein Charakter gefunden ist, sonst Beispieldaten
 app.get('/api/state', (_req, res) => {
@@ -128,7 +138,22 @@ app.get('/api/stats', (_req, res) => {
   res.set('Cache-Control', 'no-store');
   if (!wantsLive()) return void res.json({ ...demoHistory(), status: blizzard.enabled ? 'demo' : 'noKey' });
   live.refresh(settings);
-  res.json({ demo: false, ...history.get(Live.character(settings)), status: live.status });
+  refreshLogs();
+  const character = Live.character(settings);
+  res.json({ demo: false, ...history.get(character), status: live.status, logs: { status: logs.status, reports: logs.reports(character) } });
+});
+
+// Werte pro Spieler aus Warcraft Logs, erst beim Aufklappen eines Kampfes
+app.get('/api/stats/fight', async (req, res) => {
+  const code = String(req.query.code ?? '');
+  const fight = Number(req.query.fight);
+  if (!/^[A-Za-z0-9]{16}$/.test(code) || !Number.isInteger(fight)) return void res.status(400).json({ error: 'code/fight' });
+  if (code === DEMO_CODE) return void res.json(demoFight(fight));
+  try {
+    res.set('Cache-Control', 'no-store').json(await logs.fight(code, fight));
+  } catch (error) {
+    res.status(502).json({ error: (error as Error).message });
+  }
 });
 
 // Änderungen im Editor erscheinen sofort in OBS

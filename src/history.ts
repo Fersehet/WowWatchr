@@ -45,7 +45,7 @@ export interface Kill {
 }
 
 export class History {
-  private db: DatabaseSync;
+  readonly db: DatabaseSync;
 
   constructor(path: string) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });

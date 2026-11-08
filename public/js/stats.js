@@ -113,8 +113,104 @@ function runRow(t, run) {
       <div><dt>${esc(t.stPlayed)}</dt><b>${esc(dayTime(run.at))}</b></div>
     </dl>
     ${run.affixes.length ? `<div class="sub">${esc(t.stAffixes)} · ${run.affixes.map((a) => esc(name(a))).join(' · ')}</div>` : ''}
-    <div class="party">${run.members.map((m) => `<div class="${state?.character && m.name === state.character.name.split(' ')[0] ? 'me' : ''}"><strong>${esc(m.name)}</strong><span>${esc(name(m.spec))}</span><span>${esc(name(m.realm))}</span><span>${esc(t.ilvl)} ${m.ilvl}</span></div>`).join('')}</div>`;
-  return { id, at: run.at, html: () => row(id, `<span class="badge key">+${run.key}</span>`, name(run.dungeon), `${mmss(run.ms)} · ${fill(t.stPlayers, { n: run.members.length })}`, result, run.at, detail) };
+    ${run.members.length ? `<div class="party">${run.members.map((m) => `<div class="${state?.character && m.name === state.character.name.split(' ')[0] ? 'me' : ''}"><strong>${esc(m.name)}</strong><span>${esc(name(m.spec))}</span><span>${esc(name(m.realm))}</span><span>${esc(t.ilvl)} ${m.ilvl}</span></div>`).join('')}</div>` : ''}
+    ${run.log ? logBlock(t, run.log.code, run.log.fight) : ''}`;
+  const sub = [mmss(run.ms), run.members.length ? fill(t.stPlayers, { n: run.members.length }) : '', run.log ? t.stLogs : ''].filter(Boolean).join(' · ');
+  return { id, at: run.at, html: () => row(id, `<span class="badge key">+${run.key}</span>`, name(run.dungeon), sub, result, run.at, detail) };
+}
+
+// ---------- Warcraft Logs ----------
+
+const WCL_DIFF = { 3: 'normal', 4: 'heroic', 5: 'mythic' };
+const fightStats = new Map(); // code-fight -> Spielerwerte, 'error' oder ein laufender Abruf
+
+/** Platzhalter für die Spielerwerte eines Kampfes, gefüllt beim Aufklappen */
+function logBlock(t, code, fight, head = true) {
+  return `${head ? `<div class="sub">${esc(t.stLogs)}</div>` : ''}<div class="log-stats" data-code="${esc(code)}" data-fight="${Number(fight)}">${statsTable(t, code, fight)}</div>`;
+}
+
+function statsTable(t, code, fight) {
+  const stats = fightStats.get(`${code}-${fight}`);
+  if (stats === 'error') return `<p class="example">${esc(t.stLogsError)}</p>`;
+  if (!Array.isArray(stats)) return `<p class="example">${esc(t.loading)}</p>`;
+  if (!stats.length) return `<p class="example">${esc(t.stNoLogStats)}</p>`;
+  const me = state?.character?.name.split(' ')[0];
+  return `<div class="tablewrap"><table class="bosses players"><thead><tr><th>${esc(t.stPlayer)}</th><th>DPS</th><th>HPS</th><th>${esc(t.stDeaths)}</th><th>${esc(t.stInterrupts)}</th><th>${esc(t.stParse)}</th></tr></thead><tbody>
+    ${stats.map((p) => `<tr class="${p.name === me ? 'me' : ''}"><td>${esc(p.name)}</td><td>${num(p.dps)}</td><td>${num(p.hps)}</td><td class="${p.deaths ? 'down' : 'zero'}">${p.deaths}</td><td>${p.interrupts}</td><td>${p.parse == null ? '–' : `<span class="parse" style="--p:${parseColor(p.parse)}">${p.parse}</span>`}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+// Farben wie bei Warcraft Logs: grau, grün, blau, lila, orange, gold
+const parseColor = (p) => (p >= 99 ? '#e5cc80' : p >= 95 ? '#ff8000' : p >= 75 ? '#a335ee' : p >= 50 ? '#0070ff' : p >= 25 ? '#1eff00' : '#9d9d9d');
+
+/** Lädt die Spielerwerte für alle sichtbaren Platzhalter in einer aufgeklappten Zeile */
+function loadFightStats(root) {
+  for (const box of root.querySelectorAll('.log-stats')) {
+    const key = `${box.dataset.code}-${box.dataset.fight}`;
+    // Nur sichtbare Kämpfe abfragen, das schont das Abfrage-Kontingent bei Warcraft Logs
+    if (fightStats.has(key) || box.closest('[hidden]')) continue;
+    fightStats.set(key, 'loading');
+    fetch(`/api/stats/fight?code=${encodeURIComponent(box.dataset.code)}&fight=${box.dataset.fight}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((stats) => fightStats.set(key, stats), () => fightStats.set(key, 'error'))
+      .finally(() => {
+        const t = TEXTS[lang];
+        for (const el of document.querySelectorAll(`.log-stats[data-code="${box.dataset.code}"][data-fight="${box.dataset.fight}"]`)) el.innerHTML = statsTable(t, box.dataset.code, box.dataset.fight);
+      });
+  }
+}
+
+const hmm = (ms) => {
+  const m = Math.round(ms / 60000);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`;
+};
+
+/** Ein Raid-Abend aus Warcraft Logs: Versuche, Kampfzeiten und Werte pro Spieler je Boss */
+function logRaidRow(t, report) {
+  const id = `log-${report.code}-${report.start}`;
+  const fights = report.fights.filter((f) => WCL_DIFF[f.difficulty] && f.keyLevel == null);
+  const bosses = new Map();
+  for (const f of fights) {
+    const key = `${f.encounterId}-${f.difficulty}`;
+    if (!bosses.has(key)) bosses.set(key, { name: f.name, difficulty: WCL_DIFF[f.difficulty], tries: [], kill: null });
+    const b = bosses.get(key);
+    b.tries.push(f);
+    if (f.kill) b.kill = f;
+  }
+  const list = [...bosses.values()];
+  const killed = list.filter((b) => b.kill).length;
+  const length = fights.length ? Math.max(...fights.map((f) => f.end)) - Math.min(...fights.map((f) => f.start)) : 0;
+  const wipes = fights.filter((f) => !f.kill).length;
+  const diffs = [...new Set(list.map((b) => t.diff[b.difficulty]))].join(' · ');
+  const detail = `
+    <dl class="facts">
+      <div><dt>${esc(t.stRaidLength)}</dt><b>${hmm(length)}</b></div>
+      <div><dt>${esc(t.stFallen)}</dt><b class="gold">${killed} / ${list.length}</b></div>
+      <div><dt>${esc(t.stTries)}</dt><b>${fights.length}</b></div>
+      <div><dt>${esc(t.stWipes)}</dt><b class="${wipes ? 'down' : ''}">${wipes}</b></div>
+    </dl>
+    <div class="tablewrap"><table class="bosses"><thead><tr><th>${esc(t.stBoss)}</th><th>${esc(t.stDifficulty)}</th><th>${esc(t.stTries)}</th><th>${esc(t.stBestTry)}</th><th>${esc(t.stKillTime)}</th><th>${esc(t.stTimeOnBoss)}</th></tr></thead><tbody>
+      ${list.map((b, i) => {
+        const best = Math.min(...b.tries.filter((f) => !f.kill && f.percent != null).map((f) => f.percent));
+        return `<tr class="pick" data-pick="${i}" tabindex="0"><td>${esc(name(b.name))}</td><td>${esc(t.diff[b.difficulty])}</td><td>${b.tries.length}</td><td>${b.kill ? `<span class="up">${esc(t.stKilled)}</span>` : Number.isFinite(best) ? `${num(best, 1)} %` : '–'}</td><td>${b.kill ? mmss(b.kill.end - b.kill.start) : '–'}</td><td>${mmss(b.tries.reduce((s, f) => s + f.end - f.start, 0))}</td></tr>`;
+      }).join('')}
+    </tbody></table></div>
+    ${list.map((b, i) => { const f = b.kill ?? b.tries.at(-1); return `<div class="boss-stats" data-boss="${i}"${i ? ' hidden' : ''}><div class="sub">${esc(name(b.name))} · ${esc(b.kill ? t.stKill : t.stLastTry)}</div>${logBlock(t, report.code, f.id, false)}</div>`; }).join('')}`;
+  return { id, at: report.end, day: new Date(report.start).toDateString(), html: () => row(id, raidBadge(t), name(report.zone), `${diffs} · ${hmm(length)} · ${t.stLogs}`, `<span class="res gold">${esc(killed === 1 ? t.stBossOne : fill(t.stBosses, { n: killed }))}</span>`, report.start, detail) };
+}
+
+/** Dungeons aus Warcraft Logs: an den passenden Blizzard-Run hängen, sonst eigene Zeile */
+function withLogs(runs, reports) {
+  const out = runs.map((run) => ({ ...run }));
+  for (const report of reports) {
+    for (const f of report.fights.filter((x) => x.keyLevel != null)) {
+      const at = report.start + f.end;
+      const match = out.find((r) => !r.log && r.key === f.keyLevel && Math.abs(r.at - at) < 20 * 60_000);
+      if (match) match.log = { code: report.code, fight: f.id };
+      else out.push({ at, dungeonId: `log-${f.encounterId}`, dungeon: f.name, key: f.keyLevel, ms: f.keyTime ?? f.end - f.start, limit: 0, result: f.keyBonus > 0 ? f.keyBonus : -1, rating: 0, affixes: [], members: [], log: { code: report.code, fight: f.id } });
+    }
+  }
+  return out;
 }
 
 /** Boss-Tabelle mit allen Kills pro Schwierigkeit, wie Blizzard sie führt */
@@ -169,9 +265,14 @@ function row(id, badge, title, sub, result, at, detail) {
 function renderList(t) {
   $('listHead').textContent = t.stListHead;
   $('listHint').textContent = t.stListHint;
+  const reports = data?.logs?.reports ?? [];
+  const logRaids = reports.filter((r) => r.fights.some((f) => WCL_DIFF[f.difficulty] && f.keyLevel == null)).map((r) => logRaidRow(t, r));
+  // Gibt es für einen Tag ein Log, ersetzt es den Raid-Abend aus den Blizzard-Kills
+  const logged = new Set(logRaids.map((r) => r.day));
   const rows = [
-    ...(data?.runs ?? []).map((run) => runRow(t, run)),
-    ...(data?.raids ?? []).filter((raid) => raid.bosses.some((b) => b.last)).flatMap((raid) => raidRows(t, raid)),
+    ...withLogs(data?.runs ?? [], reports).map((run) => runRow(t, run)),
+    ...logRaids,
+    ...(data?.raids ?? []).filter((raid) => raid.bosses.some((b) => b.last)).flatMap((raid) => raidRows(t, raid)).filter((r) => !logged.has(new Date(r.at).toDateString())),
   ].sort((a, b) => b.at - a.at);
   // Beim ersten Öffnen ist der neueste Eintrag aufgeklappt
   if (!autoOpened && rows.length) {
@@ -179,15 +280,36 @@ function renderList(t) {
     autoOpened = true;
   }
   $('runList').innerHTML = rows.map((r) => r.html()).join('') || `<li class="empty">${esc(t.stNoRuns)}</li>`;
+  for (const li of $('runList').querySelectorAll('li.open')) loadFightStats(li);
 }
 
+// Boss in einem Raid-Abend anklicken: dessen Spielerwerte zeigen
+function pickBoss(tr) {
+  const detail = tr.closest('.detail');
+  for (const box of detail.querySelectorAll('.boss-stats')) box.hidden = box.dataset.boss !== tr.dataset.pick;
+  for (const other of detail.querySelectorAll('tr.pick')) other.classList.toggle('picked', other === tr);
+  loadFightStats(detail.querySelector(`.boss-stats[data-boss="${tr.dataset.pick}"]`));
+}
+$('runList').addEventListener('keydown', (e) => {
+  const tr = e.target.closest('tr.pick');
+  if (tr && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    pickBoss(tr);
+  }
+});
+
 $('runList').addEventListener('click', (e) => {
+  const tr = e.target.closest('tr.pick');
+  if (tr) return pickBoss(tr);
   const button = e.target.closest('.run-row');
   if (!button) return;
   const li = button.parentElement;
   const isOpen = li.classList.toggle('open');
   button.setAttribute('aria-expanded', String(isOpen));
   li.querySelector('.detail').hidden = !isOpen;
-  if (isOpen) open.add(li.dataset.id);
+  if (isOpen) {
+    open.add(li.dataset.id);
+    loadFightStats(li.querySelector('.detail'));
+  }
   else open.delete(li.dataset.id);
 });
