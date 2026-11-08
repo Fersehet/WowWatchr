@@ -31,7 +31,11 @@ const notify = () => {
 // Echte Daten nur mit Blizzard-Schlüssel, sonst Beispieldaten
 const blizzard = new Blizzard(process.env.BLIZZARD_CLIENT_ID?.trim() || '', process.env.BLIZZARD_CLIENT_SECRET?.trim() || '');
 const history = new History(join(DATA, 'history.db'));
-const live = new Live(blizzard, notify, (character, snapshot) => history.save(character, snapshot));
+const live = new Live(blizzard, notify, (character, snapshot) => {
+  history.save(character, snapshot);
+  // Jetzt ist der Realm-Slug von Blizzard bekannt, den Warcraft Logs braucht
+  refreshLogs();
+});
 const wantsLive = () => blizzard.enabled && Boolean(settings.name.trim());
 // Warcraft Logs nur mit eigenem Schlüssel und nur für Retail (Forever-Logs liegen woanders)
 const logs = new Logs(new WarcraftLogs(process.env.WCL_CLIENT_ID?.trim() || '', process.env.WCL_CLIENT_SECRET?.trim() || ''), history.db);

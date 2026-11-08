@@ -18,8 +18,8 @@ const TABLES = {
 
 test('Spielerwerte aus den Tabellen: DPS, HPS, Tode, Unterbrechungen, Parse, ohne Begleiter', () => {
   assert.deepEqual(playerStats(TABLES), [
-    { name: 'Vaelric', spec: 'Mage-Frost', dps: 500_000, hps: 0, deaths: 0, interrupts: 4, parse: 93 },
-    { name: 'Lyssia', spec: 'Priest-Holy', dps: 20_000, hps: 400_000, deaths: 2, interrupts: 0, parse: 61 },
+    { name: 'Vaelric', dps: 500_000, hps: 0, deaths: 0, interrupts: 4, parse: 93 },
+    { name: 'Lyssia', dps: 20_000, hps: 400_000, deaths: 2, interrupts: 0, parse: 61 },
   ]);
 });
 

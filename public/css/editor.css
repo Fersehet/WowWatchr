@@ -13,6 +13,7 @@
   --accent-ink: #1a1408;
   --glow: rgba(255, 209, 0, .45);
   --danger: #ff6b6b;
+  --up: #46d3b0;
   --f-display: 'Chakra Petch', 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
   --f-body: 'Barlow', 'Segoe UI', system-ui, sans-serif;
   --f-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
@@ -217,12 +218,13 @@ button[type='submit']:hover { filter: brightness(1.06); }
   .tabs { visibility: hidden; }
   /* Platz für die Leiste lassen, damit sie nichts verdeckt */
   .preview-area { padding-right: 180px; }
+  .page-picker { left: calc(50% - 90px); }
 }
 @media (min-width: 1100px) and (max-width: 1500px) { .stats-view { padding-left: 180px; padding-right: 180px; } }
 @media (prefers-reduced-motion: reduce) { .rail-track i { transition: none; } }
 
 /* Statistik-Tab wie bei FaceitWatchr */
-.stats-view { flex: 1; min-height: 0; overflow-y: auto; width: 100%; padding: 32px 16px 48px; --up: #46d3b0; --down: var(--danger); }
+.stats-view { flex: 1; min-height: 0; overflow-y: auto; width: 100%; padding: 32px 16px 48px; --down: var(--danger); }
 .stats-view > * { max-width: 1128px; margin-left: auto; margin-right: auto; }
 .stats-view .stats-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; }
 .stats-view .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 22px; min-width: 0; display: flex; flex-direction: column; }
@@ -291,7 +293,7 @@ table.bosses { width: 100%; border-collapse: collapse; font-size: 14px; font-var
 .bosses th:first-child { text-align: left; padding-left: 0; }
 .bosses td { padding: 8px; border-top: 1px solid var(--border); text-align: right; font-family: var(--f-mono); white-space: nowrap; }
 .bosses td:first-child { text-align: left; padding-left: 0; font-family: var(--f-body); white-space: normal; }
-.bosses td.zero { color: #4a556b; }
+.bosses td.zero { color: color-mix(in srgb, var(--muted) 45%, transparent); }
 /* Warcraft Logs: Boss anklicken, Werte pro Spieler */
 .bosses tr.pick { cursor: pointer; }
 .bosses tr.pick:hover td, .bosses tr.picked td { background: rgba(255, 255, 255, .03); }
