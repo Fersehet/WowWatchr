@@ -88,7 +88,7 @@ test('baut den Overlay-Zustand aus den Blizzard-Daten, auf Deutsch', async () =>
   assert.equal(state.raid.name, 'Die Leerenspitze');
   // Für die Statistik-Seite: Namen in allen Sprachen, Zeitlimit = Grenze für +1
   assert.deepEqual(state.snapshot.runs[1], {
-    at: 1, dungeonId: 161, dungeon: names('Skyreach', 'Himmelsnadel'), key: 14, ms: 1_400_000, limit: 1_800_000, result: 2, rating: 301.3,
+    at: 1, season: 17, dungeonId: 161, dungeon: names('Skyreach', 'Himmelsnadel'), key: 14, ms: 1_400_000, limit: 1_800_000, result: 2, rating: 301.3,
     affixes: [names('Fortified', 'Verstärkt')],
     members: [{ name: 'Vaelric', realm: names('Der Rat von Dalaran', 'Der Rat von Dalaran'), spec: { de_DE: 'Frost-Magier', en_US: 'Frost Mage', ru_RU: 'Mage «Frost»', fr_FR: 'Mage Frost' }, ilvl: 284 }],
   });

@@ -6,6 +6,8 @@ const $ = (id) => document.getElementById(id);
 const LOCALES = { de: 'de-DE', en: 'en-GB', ru: 'ru-RU', fr: 'fr-FR' };
 const API_LOCALES = { de: 'de_DE', en: 'en_US', ru: 'ru_RU', fr: 'fr_FR' };
 const DIFFS = ['normal', 'heroic', 'mythic'];
+/** Letzter Kill eines Bosses über alle Schwierigkeiten */
+const lastKill = (boss) => Math.max(0, ...DIFFS.map((d) => boss.last?.[d] ?? 0));
 
 let data = null;
 let state = null;
@@ -41,7 +43,9 @@ export function renderStats(uiLang) {
   const t = TEXTS[lang];
   // Pro Dungeon zählt der neueste gespeicherte Run, das ist der aktuelle Bestwert bei Blizzard
   const best = new Map();
-  for (const run of data?.runs ?? []) if (!best.has(run.dungeonId)) best.set(run.dungeonId, run);
+  // Nur die neueste Saison, ältere Bestwerte bleiben in der Liste
+  const season = Math.max(0, ...(data?.runs ?? []).map((r) => r.season ?? 0));
+  for (const run of data?.runs ?? []) if ((run.season ?? 0) === season && !best.has(run.dungeonId)) best.set(run.dungeonId, run);
   renderChart(t, [...best.values()]);
   renderSeason(t);
   renderList(t);
@@ -78,7 +82,8 @@ function renderChart(t, runs) {
     const label = name(run.dungeon);
     svg += `<rect class="bar${run.result < 0 ? ' over' : ''}" x="${x}" y="${y(run.rating)}" width="${bar}" height="${y(0) - y(run.rating)}" rx="3"><title>${esc(label)} +${run.key} · ${num(run.rating, 1)}</title></rect>`;
     svg += `<text class="key" x="${x + bar / 2}" y="${y(run.rating) - 6}" text-anchor="middle">+${run.key}</text>`;
-    svg += `<text x="${x + bar / 2}" y="${H - 8}" text-anchor="middle">${esc(label.replace(/^(The|Die|Der|Das|La|Le|Les|L’|L') ?/i, '').slice(0, 7))}</text>`;
+    const short = label.length > 9 ? `${label.slice(0, 8)}…` : label;
+    svg += `<text x="${x + bar / 2}" y="${H - 8}" text-anchor="middle">${esc(short)}<title>${esc(label)}</title></text>`;
   });
   chart.innerHTML = svg;
   chart.setAttribute('aria-label', t.stMplusHead);
@@ -135,7 +140,7 @@ function statsTable(t, code, fight) {
   if (!Array.isArray(stats)) return `<p class="example">${esc(t.loading)}</p>`;
   if (!stats.length) return `<p class="example">${esc(t.stNoLogStats)}</p>`;
   const me = state?.character?.name.split(' ')[0];
-  return `<div class="tablewrap"><table class="bosses players"><thead><tr><th>${esc(t.stPlayer)}</th><th>DPS</th><th>HPS</th><th>${esc(t.stDeaths)}</th><th>${esc(t.stInterrupts)}</th><th>${esc(t.stParse)}</th></tr></thead><tbody>
+  return `<div class="tablewrap"><table class="bosses players"><thead><tr><th>${esc(t.stPlayer)}</th><th>${esc(t.stDps)}</th><th>${esc(t.stHps)}</th><th>${esc(t.stDeaths)}</th><th>${esc(t.stInterrupts)}</th><th>${esc(t.stParse)}</th></tr></thead><tbody>
     ${stats.map((p) => `<tr class="${p.name === me ? 'me' : ''}"><td>${esc(p.name)}</td><td>${num(p.dps)}</td><td>${num(p.hps)}</td><td class="${p.deaths ? 'down' : 'zero'}">${p.deaths}</td><td>${p.interrupts}</td><td>${p.parse == null ? '–' : `<span class="parse" style="--p:${parseColor(p.parse)}">${p.parse}</span>`}</td></tr>`).join('')}
   </tbody></table></div>`;
 }
@@ -162,7 +167,7 @@ function loadFightStats(root) {
 
 const hmm = (ms) => {
   const m = Math.round(ms / 60000);
-  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`;
+  return fill(TEXTS[lang].stHours, { t: `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}` });
 };
 
 /** Ein Raid-Abend aus Warcraft Logs: Versuche, Kampfzeiten und Werte pro Spieler je Boss */
@@ -192,7 +197,7 @@ function logRaidRow(t, report) {
     <div class="tablewrap"><table class="bosses"><thead><tr><th>${esc(t.stBoss)}</th><th>${esc(t.stDifficulty)}</th><th>${esc(t.stTries)}</th><th>${esc(t.stBestTry)}</th><th>${esc(t.stKillTime)}</th><th>${esc(t.stTimeOnBoss)}</th></tr></thead><tbody>
       ${list.map((b, i) => {
         const best = Math.min(...b.tries.filter((f) => !f.kill && f.percent != null).map((f) => f.percent));
-        return `<tr class="pick" data-pick="${i}" tabindex="0"><td>${esc(name(b.name))}</td><td>${esc(t.diff[b.difficulty])}</td><td>${b.tries.length}</td><td>${b.kill ? `<span class="up">${esc(t.stKilled)}</span>` : Number.isFinite(best) ? `${num(best, 1)} %` : '–'}</td><td>${b.kill ? mmss(b.kill.end - b.kill.start) : '–'}</td><td>${mmss(b.tries.reduce((s, f) => s + f.end - f.start, 0))}</td></tr>`;
+        return `<tr class="pick${i ? '' : ' picked'}" data-pick="${i}" tabindex="0"><td>${esc(name(b.name))}</td><td>${esc(t.diff[b.difficulty])}</td><td>${b.tries.length}</td><td>${b.kill ? `<span class="up">${esc(t.stKilled)}</span>` : Number.isFinite(best) ? `${num(best, 1)} %` : '–'}</td><td>${b.kill ? mmss(b.kill.end - b.kill.start) : '–'}</td><td>${mmss(b.tries.reduce((s, f) => s + f.end - f.start, 0))}</td></tr>`;
       }).join('')}
     </tbody></table></div>
     ${list.map((b, i) => { const f = b.kill ?? b.tries.at(-1); return `<div class="boss-stats" data-boss="${i}"${i ? ' hidden' : ''}><div class="sub">${esc(name(b.name))} · ${esc(b.kill ? t.stKill : t.stLastTry)}</div>${logBlock(t, report.code, f.id, false)}</div>`; }).join('')}`;
@@ -203,11 +208,12 @@ function logRaidRow(t, report) {
 function withLogs(runs, reports) {
   const out = runs.map((run) => ({ ...run }));
   for (const report of reports) {
-    for (const f of report.fights.filter((x) => x.keyLevel != null)) {
+    // Nur der Kampf für den ganzen Dungeon hat eine Key-Zeit, einzelne Boss-Kämpfe nicht
+    for (const f of report.fights.filter((x) => x.keyLevel != null && x.keyTime != null)) {
       const at = report.start + f.end;
       const match = out.find((r) => !r.log && r.key === f.keyLevel && Math.abs(r.at - at) < 20 * 60_000);
       if (match) match.log = { code: report.code, fight: f.id };
-      else out.push({ at, dungeonId: `log-${f.encounterId}`, dungeon: f.name, key: f.keyLevel, ms: f.keyTime ?? f.end - f.start, limit: 0, result: f.keyBonus > 0 ? f.keyBonus : -1, rating: 0, affixes: [], members: [], log: { code: report.code, fight: f.id } });
+      else out.push({ at, dungeonId: `log-${f.encounterId}`, dungeon: f.name, key: f.keyLevel, ms: f.keyTime, limit: 0, result: f.keyBonus > 0 ? f.keyBonus : -1, rating: 0, affixes: [], members: [], log: { code: report.code, fight: f.id } });
     }
   }
   return out;
@@ -216,7 +222,7 @@ function withLogs(runs, reports) {
 /** Boss-Tabelle mit allen Kills pro Schwierigkeit, wie Blizzard sie führt */
 function bossTable(t, raid) {
   return `<div class="tablewrap"><table class="bosses"><thead><tr><th>${esc(t.stBoss)}</th>${DIFFS.map((d) => `<th>${esc(t.diff[d])}</th>`).join('')}<th>${esc(t.stLastKill)}</th></tr></thead><tbody>
-    ${raid.bosses.map((b) => `<tr><td>${esc(name(b.name))}</td>${DIFFS.map((d) => `<td class="${b.kills[d] ? '' : 'zero'}">${b.kills[d]}×</td>`).join('')}<td>${b.last ? day(b.last) : '–'}</td></tr>`).join('')}
+    ${raid.bosses.map((b) => `<tr><td>${esc(name(b.name))}</td>${DIFFS.map((d) => `<td class="${b.kills[d] ? '' : 'zero'}">${b.kills[d]}×</td>`).join('')}<td>${lastKill(b) ? day(lastKill(b)) : '–'}</td></tr>`).join('')}
   </tbody></table></div>`;
 }
 
@@ -248,7 +254,7 @@ function raidRows(t, raid) {
   }
   const id = `raid-${raid.id}`;
   const total = raid.bosses.length;
-  const last = Math.max(0, ...raid.bosses.map((b) => b.last));
+  const last = Math.max(0, ...raid.bosses.map(lastKill));
   const kills = raid.bosses.reduce((s, b) => s + DIFFS.reduce((a, d) => a + b.kills[d], 0), 0);
   const progress = DIFFS.map((d) => `${raid.bosses.filter((b) => b.kills[d] > 0).length}/${total} ${t.diffShort[d]}`).join(' · ');
   const detail = `${bossTable(t, raid)}<p class="example">${esc(t.stNightsSoon)}</p>`;
@@ -272,7 +278,7 @@ function renderList(t) {
   const rows = [
     ...withLogs(data?.runs ?? [], reports).map((run) => runRow(t, run)),
     ...logRaids,
-    ...(data?.raids ?? []).filter((raid) => raid.bosses.some((b) => b.last)).flatMap((raid) => raidRows(t, raid)).filter((r) => !logged.has(new Date(r.at).toDateString())),
+    ...(data?.raids ?? []).filter((raid) => raid.bosses.some(lastKill)).flatMap((raid) => raidRows(t, raid)).filter((r) => !logged.has(new Date(r.at).toDateString())),
   ].sort((a, b) => b.at - a.at);
   // Beim ersten Öffnen ist der neueste Eintrag aufgeklappt
   if (!autoOpened && rows.length) {

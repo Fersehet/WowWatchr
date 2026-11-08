@@ -14,6 +14,7 @@ export type Difficulty = 'normal' | 'heroic' | 'mythic';
 
 export interface Run {
   at: number;
+  season: number;
   dungeonId: number;
   dungeon: Names;
   key: number;
@@ -28,7 +29,7 @@ export interface Run {
 export interface Raid {
   id: number;
   name: Names;
-  bosses: { id: number; name: Names; kills: Record<Difficulty, number>; last: number }[];
+  bosses: { id: number; name: Names; kills: Record<Difficulty, number>; last: Record<Difficulty, number> }[];
 }
 
 export interface Snapshot {
@@ -91,9 +92,10 @@ export class History {
           const old = before.get(character, boss.id, difficulty) as { count: number } | undefined;
           // Erste Abfrage nur als Ausgangsstand: wann frühere Kills waren, weiß Blizzard nicht
           if (old && now > old.count) {
-            kill.run(character, boss.last, JSON.stringify({ at: boss.last, raid: raid.name, boss: boss.name, difficulty, count: now - old.count } satisfies Kill));
+            kill.run(character, boss.last[difficulty], JSON.stringify({ at: boss.last[difficulty], raid: raid.name, boss: boss.name, difficulty, count: now - old.count } satisfies Kill));
           }
-          count.run(character, boss.id, difficulty, now);
+          // Nie kleiner werden: eine unvollständige Antwort von Blizzard soll später keinen falschen Kill ergeben
+          count.run(character, boss.id, difficulty, Math.max(now, old?.count ?? 0));
         }
       }
     }

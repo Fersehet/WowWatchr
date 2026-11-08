@@ -62,10 +62,8 @@ export const DEMO_CODE = 'DemoReport000001';
 
 /** Beispielwerte pro Spieler wie aus Warcraft Logs */
 export function demoFight(fight: number) {
-  const specs = ['Mage-Frost', 'Warrior-Protection', 'Priest-Holy', 'DemonHunter-Havoc', 'Druid-Restoration'];
   return PARTY.map(([name], i) => ({
     name,
-    spec: specs[i],
     dps: [512_400, 198_300, 61_200, 488_900, 54_700][i] - fight * 1_000,
     hps: [8_100, 21_400, 402_600, 6_300, 377_800][i],
     deaths: i === 3 && fight % 2 ? 1 : 0,
@@ -83,6 +81,7 @@ export function demoHistory() {
     demo: true,
     runs: RUNS.map((run, i) => ({
       at: now - (i * 1.5 + 0.5) * DAY,
+      season: 1,
       dungeonId: i + 1,
       dungeon: dungeon(i),
       key: run.key,
@@ -122,7 +121,7 @@ export function demoHistory() {
         id: i + 1,
         name: boss(i + 1),
         kills: { normal: 3, heroic: 5 - Math.floor(i / 2), mythic: i < 4 ? 2 : 0 },
-        last: now - last * 0.4 * DAY,
+        last: { normal: now - (last + 3) * 0.4 * DAY, heroic: now - last * 0.4 * DAY, mythic: i < 4 ? now - last * 0.4 * DAY : 0 },
       })),
     }],
   };

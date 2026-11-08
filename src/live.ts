@@ -142,6 +142,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   const snapshot: Snapshot = {
     runs: await Promise.all(best.map(async (run): Promise<Run> => ({
       at: run.completed_timestamp,
+      season: seasons?.current_season?.id ?? 0,
       dungeonId: run.dungeon.id,
       dungeon: run.dungeon.name ?? '',
       key: run.keystone_level,
@@ -164,9 +165,9 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
         if (!['normal', 'heroic', 'mythic'].includes(difficulty)) continue;
         for (const e of m.progress?.encounters ?? []) {
           const id = e.encounter?.id ?? 0;
-          const boss = bosses.get(id) ?? { id, name: e.encounter?.name ?? '', kills: { normal: 0, heroic: 0, mythic: 0 }, last: 0 };
+          const boss = bosses.get(id) ?? { id, name: e.encounter?.name ?? '', kills: { normal: 0, heroic: 0, mythic: 0 }, last: { normal: 0, heroic: 0, mythic: 0 } };
           boss.kills[difficulty as 'normal'] = e.completed_count ?? 0;
-          boss.last = Math.max(boss.last, e.last_kill_timestamp ?? 0);
+          boss.last[difficulty as 'normal'] = e.last_kill_timestamp ?? 0;
           bosses.set(id, boss);
         }
       }

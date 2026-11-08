@@ -39,7 +39,6 @@ export interface Report {
 
 export interface PlayerStats {
   name: string;
-  spec: string; // z. B. "Mage-Frost"
   dps: number;
   hps: number;
   deaths: number;
@@ -121,8 +120,12 @@ function interruptsBy(table: Json | undefined) {
     if (Array.isArray(node)) return node.forEach(visit);
     if (!node || typeof node !== 'object') return;
     const obj = node as Json;
-    if (Array.isArray(obj.details)) for (const d of obj.details) if (d?.name) counts.set(d.name, (counts.get(d.name) ?? 0) + (Number(d.total ?? d.count) || 0));
-    for (const [key, child] of Object.entries(obj)) if (key !== 'details') visit(child);
+    // Zeile mit „details“ ist die unterste Ebene, darunter nicht weiter zählen
+    if (Array.isArray(obj.details)) {
+      for (const d of obj.details) if (d?.name) counts.set(d.name, (counts.get(d.name) ?? 0) + (Number(d.total ?? d.count) || 0));
+      return;
+    }
+    for (const child of Object.values(obj)) visit(child);
   };
   visit(table);
   return counts;
@@ -145,7 +148,6 @@ export function playerStats(report: Json): PlayerStats[] {
     .filter((e) => e.type !== 'Pet' && e.type !== 'NPC')
     .map((e) => ({
       name: e.name,
-      spec: String(e.icon ?? e.type ?? ''),
       dps: Math.round((Number(e.total) || 0) / seconds),
       hps: Math.round((healing.get(e.name) ?? 0) / seconds),
       deaths: deaths.get(e.name) ?? 0,
