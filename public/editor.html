@@ -24,14 +24,23 @@
         <div class="brand"><img class="brand-mark" src="/logo.svg" alt="" width="30" height="30" /><img class="brand-word" src="/logo-wordmark.svg" alt="WowWatchr" width="118" height="18" /></div>
         <div class="status" id="status"></div>
       </div>
-      <nav class="tabs" id="tabs" role="group"></nav>
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="overlay" data-i18n="tabOverlay"></button>
+        <button type="button" role="tab" data-tab="stats" data-i18n="tabStats"></button>
+      </nav>
       <div class="account">
         <select id="editorLang" class="lang"></select>
         <span id="accountName"></span>
         <button id="logout" class="head-btn" type="button" data-i18n="logout"></button>
       </div>
     </header>
-    <main>
+    <!-- Ansichten-Leiste rechts wie bei FaceitWatchr -->
+    <nav class="rail" id="rail">
+      <div class="rail-track" aria-hidden="true"><i></i></div>
+      <a href="#" data-tab="overlay"><span><b>01</b><em data-i18n="tabOverlay"></em></span></a>
+      <a href="#stats" data-tab="stats"><span><b>02</b><em data-i18n="tabStats"></em></span></a>
+    </nav>
+    <main id="overlayView">
       <aside>
         <section>
           <h2 data-i18n="character"></h2>
@@ -69,10 +78,42 @@
         </section>
       </aside>
       <div class="preview-area">
+        <!-- Welche Seite die Vorschau zeigt -->
+        <div class="page-picker" id="pagePicker" role="group"></div>
         <div class="stage" id="stage"><iframe id="frame" title="WowWatchr"></iframe></div>
         <p class="hint" data-i18n="checker"></p>
       </div>
     </main>
+
+    <div id="statsView" class="stats-view" hidden>
+      <div class="stats-grid">
+        <div class="panel">
+          <div class="panel-head"><span id="chartHead"></span><b id="chartScore">–</b></div>
+          <svg id="ratingChart" class="chart" viewBox="0 0 600 236" role="img"></svg>
+          <dl class="trend">
+            <div><dt data-i18n="best"></dt><b id="trBest" class="gold">–</b></div>
+            <div><dt data-i18n="timed"></dt><b id="trTimed">–</b></div>
+            <div><dt data-i18n="stAvgKey"></dt><b id="trAvg">–</b></div>
+          </dl>
+          <p class="example" id="chartNote"></p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span id="seasonHead"></span><span id="seasonName"></span></div>
+          <dl class="session">
+            <div><dt data-i18n="score"></dt><b id="ssScore" class="gold">–</b></div>
+            <div><dt data-i18n="best"></dt><b id="ssBest">–</b></div>
+            <div><dt data-i18n="stTimed"></dt><b id="ssTimed">–</b></div>
+            <div><dt data-i18n="stRaidProgress"></dt><b id="ssRaid">–</b></div>
+            <div><dt data-i18n="stBossKills"></dt><b id="ssKills">–</b></div>
+          </dl>
+          <p class="example" id="seasonNote"></p>
+        </div>
+      </div>
+      <div class="panel list-panel">
+        <div class="panel-head"><span id="listHead"></span><span id="listHint"></span></div>
+        <ul class="runs" id="runList"></ul>
+      </div>
+    </div>
     <script type="module" src="/js/editor.js"></script>
   </body>
 </html>

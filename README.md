@@ -15,7 +15,8 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 - Three layouts: a **Classic** card, a slim **Bar** and a tall **Sidebar**
 - One OBS URL that switches through the pages on its own, or one URL per page
 - An editor in your browser with a live preview, protected by a login if you set a password, and every change shows up in OBS right away
-- Real character data from the official Blizzard API, with your own free key
+- A **Statistics** page in the editor: your recent dungeons and raids, each row opens with the group, timer, affixes and the bosses killed
+- Real character data from the official Blizzard API, with your own free key, and optionally Warcraft Logs for tries, kill times and DPS, HPS, deaths, interrupts and parses per player
 - Editor and overlay in English, German, Russian and French
 
 ## What it looks like
@@ -23,6 +24,10 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 **Editor:** pick a layout, switch pages on or off, change the accent colour, character name or overlay language, and choose whether Normal, Heroic and Mythic show in their own colours (green, blue, purple) or in the accent colour. The preview and OBS follow every change right away.
 
 ![Editor with the overlay preview](docs/screenshots/editor.png)
+
+**Statistics:** your M+ rating per dungeon, the current season, and your recent dungeons and raids. Click a row to see the group, timer, affixes, the bosses killed and, with Warcraft Logs, tries, kill times and the stats of every player.
+
+![Statistics view with best runs, season and recent dungeons and raids](docs/screenshots/stats.png)
 
 **Classic** (640 × 270): a card in the corner.
 
@@ -88,7 +93,24 @@ WowWatchr loads your character from the official Blizzard API. For that you need
 
 **WoW Forever (test):** pick **Forever** under **Game** and enter your character's **surname** instead of a realm. The same Blizzard key works. Blizzard has not documented the Forever API yet, so this can break when Blizzard changes it. Players report that a Forever character shows up only from level 10 and after you log out once.
 
-The keys stay on your server; OBS and the overlay never see them. WowWatchr refreshes the data every five minutes. Blizzard updates a character when you log out, so new runs and kills show up after that. Best parses need Warcraft Logs and are not shown yet.
+The keys stay on your server; OBS and the overlay never see them. WowWatchr refreshes the data every five minutes. Blizzard updates a character when you log out, so new runs and kills show up after that.
+
+**What the Statistics page can show:** Blizzard keeps only your best run per dungeon and, per raid boss, a kill count and the date of the last kill. WowWatchr saves every new best run and compares the kill counts on each refresh, so the list of dungeons and raid nights grows from the day you set it up. Older raid nights can't be filled in.
+
+## Warcraft Logs
+
+With an optional Warcraft Logs key, the Statistics page also shows tries, best try, kill time and time on each boss, the raid length, and DPS, HPS, deaths, interrupts and parse for every player, in raids and in dungeons. That only works for fights that someone in your group logged and uploaded to Warcraft Logs.
+
+1. Sign in at [warcraftlogs.com](https://www.warcraftlogs.com) and open [warcraftlogs.com/api/clients](https://www.warcraftlogs.com/api/clients).
+2. Click **Create Client**, name it `WowWatchr`, enter `http://localhost` as redirect URL and save.
+3. Copy the **Client ID** and **Client Secret** into `.env`:
+
+   ```env
+   WCL_CLIENT_ID=your-client-id
+   WCL_CLIENT_SECRET=your-client-secret
+   ```
+
+4. Restart the server. WowWatchr looks for new logs of your character every ten minutes. Player stats load when you open a fight.
 
 ## Adding it to OBS
 
@@ -106,6 +128,8 @@ The keys stay on your server; OBS and the overlay never see them. WowWatchr refr
 - **"No Blizzard key":** put `BLIZZARD_CLIENT_ID` and `BLIZZARD_CLIENT_SECRET` into `.env` and restart the server.
 - **"Blizzard unreachable":** a new key needs up to 15 minutes. If it stays, check both values in `.env` and look for "Blizzard" in the server log.
 - **"Character not found":** check the spelling of the name (accents count), the realm and the region. A character that has not logged in for a long time can be missing at Blizzard until you log in and out once.
+- **No Warcraft Logs on the Statistics page:** check `WCL_CLIENT_ID` and `WCL_CLIENT_SECRET` in `.env` and restart the server. Your character must be in a log that was uploaded to Warcraft Logs; private logs are not shown. Look for "Warcraft Logs" in the server log.
+- **The Statistics page lists only a few dungeons:** Blizzard only knows your best run per dungeon. Every new best gets saved from now on, so the list grows over time. With Warcraft Logs, every logged run shows up.
 - **Nothing shows up in OBS:** open the OBS URL in your browser. If it stays empty there, copy the URL again from the editor under **Add to OBS**. If the server runs on another machine, use its IP instead of `localhost`.
 - **The overlay is cut off in OBS:** set the width and height of the Browser source to the size of your layout: Classic 640 × 270, Bar 1060 × 84, Sidebar 300 × 590.
 - **The overlay doesn't switch pages:** the switching URL only rotates through pages that are ticked under **Pages**, so tick at least two. The time per page is set under **Switch every (seconds)**.

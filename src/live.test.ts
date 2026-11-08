@@ -12,6 +12,7 @@ const API: Record<string, unknown> = {
   '/data/wow/mythic-keystone/dungeon/161': { keystone_upgrades: [
     { upgrade_level: 1, qualifying_duration: 1_800_000 }, { upgrade_level: 2, qualifying_duration: 1_440_000 }, { upgrade_level: 3, qualifying_duration: 1_080_000 },
   ] },
+  '/data/wow/playable-specialization/64': { playable_class: { name: names('Mage', 'Magier') } },
   [CHAR]: {
     name: 'Vaelric', realm: { name: names('Der Rat von Dalaran', 'Der Rat von Dalaran') }, guild: { name: 'Silent Vigil' },
     equipped_item_level: 284, active_spec: { name: names('Frost', 'Frost') }, character_class: { name: names('Mage', 'Magier') },
@@ -21,7 +22,9 @@ const API: Record<string, unknown> = {
   [`${CHAR}/mythic-keystone-profile/season/17`]: {
     mythic_rating: { rating: 2847.4 },
     best_runs: [
-      { completed_timestamp: 1, duration: 1_400_000, keystone_level: 14, is_completed_within_time: true, dungeon: { id: 161, name: names('Skyreach', 'Himmelsnadel') } },
+      { completed_timestamp: 1, duration: 1_400_000, keystone_level: 14, is_completed_within_time: true, dungeon: { id: 161, name: names('Skyreach', 'Himmelsnadel') },
+        mythic_rating: { rating: 301.26 }, keystone_affixes: [{ name: names('Fortified', 'Verstärkt') }],
+        members: [{ character: { name: 'Vaelric', realm: { slug: 'der-rat-von-dalaran' } }, specialization: { id: 64, name: names('Frost', 'Frost') }, equipped_item_level: 284 }] },
       { completed_timestamp: 3, duration: 1_901_000, keystone_level: 15, is_completed_within_time: false, dungeon: { id: 556, name: names('Pit of Saron', 'Grube von Saron') } },
     ],
   },
@@ -31,8 +34,8 @@ const API: Record<string, unknown> = {
       { instances: [
         { instance: { name: names('The Dreamrift', 'Der Traumriss') }, modes: [{ difficulty: { type: 'NORMAL' }, progress: { completed_count: 1, total_count: 1, encounters: [{ completed_count: 1, last_kill_timestamp: 5 }] } }] },
         { instance: { name: names('The Voidspire', 'Die Leerenspitze') }, modes: [
-          { difficulty: { type: 'NORMAL' }, progress: { completed_count: 6, total_count: 6, encounters: [{ completed_count: 4, last_kill_timestamp: 9 }, { completed_count: 2 }] } },
-          { difficulty: { type: 'HEROIC' }, progress: { completed_count: 4, total_count: 6, encounters: [{ completed_count: 3 }, { completed_count: 2 }] } },
+          { difficulty: { type: 'NORMAL' }, progress: { completed_count: 6, total_count: 6, encounters: [{ encounter: { id: 1 }, completed_count: 4, last_kill_timestamp: 9 }, { encounter: { id: 2 }, completed_count: 2 }] } },
+          { difficulty: { type: 'HEROIC' }, progress: { completed_count: 4, total_count: 6, encounters: [{ encounter: { id: 1 }, completed_count: 3 }, { encounter: { id: 2 }, completed_count: 2 }] } },
         ] },
       ] },
     ],
@@ -83,6 +86,13 @@ test('baut den Overlay-Zustand aus den Blizzard-Daten, auf Deutsch', async () =>
     { key: 14, name: 'Himmelsnadel', time: '23:20', result: 2 },
   ]);
   assert.equal(state.raid.name, 'Die Leerenspitze');
+  // Für die Statistik-Seite: Namen in allen Sprachen, Zeitlimit = Grenze für +1
+  assert.deepEqual(state.snapshot.runs[1], {
+    at: 1, season: 17, dungeonId: 161, dungeon: names('Skyreach', 'Himmelsnadel'), key: 14, ms: 1_400_000, limit: 1_800_000, result: 2, rating: 301.3,
+    affixes: [names('Fortified', 'Verstärkt')],
+    members: [{ name: 'Vaelric', realm: names('Der Rat von Dalaran', 'Der Rat von Dalaran'), spec: { de_DE: 'Frost-Magier', en_US: 'Frost Mage', ru_RU: 'Mage «Frost»', fr_FR: 'Mage Frost' }, ilvl: 284 }],
+  });
+  assert.deepEqual(state.snapshot.raids.map((r) => r.bosses.length), [1, 2]);
   assert.equal(state.raid.bosses, 6);
   assert.deepEqual(state.raid.difficulties.map((d) => [d.killed, d.kills, d.parse]), [[6, 6, null], [4, 5, null], [0, 0, null]]);
 });

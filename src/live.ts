@@ -1,3 +1,4 @@
+import type { Raid, Run, Snapshot } from './history.ts';
 import type { Lang, Region, Settings } from './settings.ts';
 
 /**
@@ -12,6 +13,10 @@ type Fetch = typeof fetch;
 const LOCALES: Record<Lang, string> = { de: 'de_DE', en: 'en_US', ru: 'ru_RU', fr: 'fr_FR' };
 // Jede Saison seit Dragonflight hat acht Dungeons
 const SEASON_DUNGEONS = 8;
+// Spezialisierung und Klasse in der Reihenfolge der Sprache
+const SPEC: Record<Lang, (spec: string, cls: string) => string> = {
+  de: (s, c) => `${s}-${c}`, en: (s, c) => `${s} ${c}`, fr: (s, c) => `${c} ${s}`, ru: (s, c) => `${c} «${s}»`,
+};
 // Grobe Skala für den Balken: 4000 Wertung = voll
 const SCORE_FULL = 4000;
 
@@ -83,6 +88,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   const name = settings.name.trim().toLowerCase();
   const wanted = settings.realm.trim().toLowerCase();
   let path: string;
+  let realmSlug = slug(wanted);
   if (forever) {
     path = `/profile/wow/character/${encodeURIComponent(`${name}-${slug(wanted)}`)}`;
   } else {
@@ -90,6 +96,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
     const realms = await blizzard.cached(region, '/data/wow/realm/index');
     const realm = realms?.realms?.find((r: Json) => r.slug === slug(wanted) || Object.values(r.name ?? {}).some((n) => String(n).toLowerCase() === wanted))?.slug ?? slug(wanted);
     path = `/profile/wow/character/${realm}/${encodeURIComponent(name)}`;
+    realmSlug = realm;
   }
   const profile = await blizzard.get(region, path, ns('profile'));
   if (!profile) return null;
@@ -106,10 +113,10 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   const best: Json[] = (season?.best_runs ?? []).toSorted((a: Json, b: Json) => b.completed_timestamp - a.completed_timestamp);
   const timed = best.filter((run) => run.is_completed_within_time);
   // Stufen (+1 bis +3) stehen nur in den Dungeon-Daten: Zeitgrenzen pro Stufe
+  const dungeonData = (run: Json) => blizzard.cached(region, `/data/wow/mythic-keystone/dungeon/${run.dungeon.id}`, ns('dynamic'));
   const upgrades = async (run: Json) => {
     if (!run.is_completed_within_time) return -1;
-    const dungeon = await blizzard.cached(region, `/data/wow/mythic-keystone/dungeon/${run.dungeon.id}`, ns('dynamic'));
-    const steps = (dungeon?.keystone_upgrades ?? []).filter((u: Json) => run.duration <= u.qualifying_duration).length;
+    const steps = ((await dungeonData(run))?.keystone_upgrades ?? []).filter((u: Json) => run.duration <= u.qualifying_duration).length;
     return Math.max(1, steps);
   };
 
@@ -121,10 +128,56 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   const mode = (type: string) => instance?.modes?.find((m: Json) => m.difficulty?.type === type)?.progress;
 
   const pct = (...values: unknown[]) => Math.round(Math.max(...values.map((v) => Number(v) || 0)));
-  const spec = { de: (s: string, c: string) => `${s}-${c}`, en: (s: string, c: string) => `${s} ${c}`, fr: (s: string, c: string) => `${c} ${s}`, ru: (s: string, c: string) => `${c} «${s}»` }[lang];
+  const spec = SPEC[lang];
   const score = Math.round(season?.mythic_rating?.rating ?? 0);
 
+  // Für die Statistik-Seite: alle Namen in allen Sprachen, gespeichert wird auf dem Server (history.ts)
+  const specName = async (spec: Json | undefined) => {
+    if (!spec?.id) return '';
+    const data = await blizzard.cached(region, `/data/wow/playable-specialization/${spec.id}`, ns('static'));
+    const cls = data?.playable_class?.name;
+    if (!cls || typeof spec.name !== 'object') return spec.name ?? '';
+    return Object.fromEntries(Object.entries(LOCALES).map(([l, loc]) => [loc, SPEC[l as Lang](spec.name[loc] ?? spec.name.en_US, cls[loc] ?? cls.en_US)]));
+  };
+  const snapshot: Snapshot = {
+    runs: await Promise.all(best.map(async (run): Promise<Run> => ({
+      at: run.completed_timestamp,
+      season: seasons?.current_season?.id ?? 0,
+      dungeonId: run.dungeon.id,
+      dungeon: run.dungeon.name ?? '',
+      key: run.keystone_level,
+      ms: run.duration,
+      limit: (await dungeonData(run))?.keystone_upgrades?.find((u: Json) => u.upgrade_level === 1)?.qualifying_duration ?? 0,
+      result: await upgrades(run),
+      rating: Math.round((run.mythic_rating?.rating ?? 0) * 10) / 10,
+      affixes: (run.keystone_affixes ?? []).map((a: Json) => a.name ?? ''),
+      members: await Promise.all((run.members ?? []).map(async (m: Json) => ({
+        name: m.character?.name ?? '',
+        realm: (forever ? null : (await blizzard.cached(region, '/data/wow/realm/index'))?.realms?.find((r: Json) => r.slug === m.character?.realm?.slug)?.name) ?? m.character?.realm?.slug ?? '',
+        spec: await specName(m.specialization),
+        ilvl: m.equipped_item_level ?? 0,
+      }))),
+    }))),
+    raids: newest.map((inst: Json): Raid => {
+      const bosses = new Map<number, Raid['bosses'][number]>();
+      for (const m of inst.modes ?? []) {
+        const difficulty = String(m.difficulty?.type ?? '').toLowerCase();
+        if (!['normal', 'heroic', 'mythic'].includes(difficulty)) continue;
+        for (const e of m.progress?.encounters ?? []) {
+          const id = e.encounter?.id ?? 0;
+          const boss = bosses.get(id) ?? { id, name: e.encounter?.name ?? '', kills: { normal: 0, heroic: 0, mythic: 0 }, last: { normal: 0, heroic: 0, mythic: 0 } };
+          boss.kills[difficulty as 'normal'] = e.completed_count ?? 0;
+          boss.last[difficulty as 'normal'] = e.last_kill_timestamp ?? 0;
+          bosses.set(id, boss);
+        }
+      }
+      return { id: inst.instance?.id ?? 0, name: inst.instance?.name ?? '', bosses: [...bosses.values()] };
+    }),
+  };
+
   return {
+    snapshot,
+    realmSlug,
     demo: false,
     character: {
       name: profile.surname ? `${profile.name} ${tr(profile.surname)}` : profile.name,
@@ -173,7 +226,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
   };
 }
 
-export type LiveState = NonNullable<Awaited<ReturnType<typeof fetchLive>>>;
+export type LiveState = Omit<NonNullable<Awaited<ReturnType<typeof fetchLive>>>, 'snapshot' | 'realmSlug'>;
 
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -181,11 +234,18 @@ const REFRESH_MS = 5 * 60 * 1000;
 export class Live {
   state: LiveState | null = null;
   status: Status = 'loading';
+  /** Realm als Slug, wie Blizzard ihn kennt; Warcraft Logs nutzt denselben */
+  realmSlug = '';
   private key = '';
   private at = 0;
   private running: Promise<void> | null = null;
 
-  constructor(private blizzard: Blizzard, private onChange: () => void) {}
+  constructor(private blizzard: Blizzard, private onChange: () => void, private onSnapshot: (character: string, snapshot: Snapshot) => void = () => {}) {}
+
+  /** Charakter ohne Sprache, für den Verlauf */
+  static character(settings: Settings) {
+    return [settings.game, settings.region, settings.realm, settings.name].map((v) => v.trim().toLowerCase()).join('/');
+  }
 
   /** Startet bei Bedarf im Hintergrund eine Abfrage; das Ergebnis kommt über onChange. */
   refresh(settings: Settings) {
@@ -195,13 +255,19 @@ export class Live {
       // Anderer Charakter: alte Daten nicht mehr zeigen
       this.state = null;
       this.status = 'loading';
+      this.realmSlug = '';
     }
     this.key = key;
     this.at = Date.now();
     this.running = fetchLive(settings, this.blizzard)
-      .then((state) => {
-        this.state = state;
-        this.status = state ? 'live' : 'notFound';
+      .then((result) => {
+        if (result) {
+          const { snapshot, realmSlug, ...state } = result;
+          this.state = state;
+          this.realmSlug = realmSlug;
+          this.onSnapshot(Live.character(settings), snapshot);
+        } else this.state = null;
+        this.status = result ? 'live' : 'notFound';
       })
       .catch((error) => {
         console.warn('WowWatchr: Blizzard nicht erreichbar:', error.message);
