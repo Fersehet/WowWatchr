@@ -4,7 +4,9 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Auth, type LoginError } from './auth.ts';
 import { DEMO_CODE, demoFight, demoHistory, demoState } from './demo.ts';
-import { History } from './history.ts';
+import { Discord } from './discord.ts';
+import { TEXTS as DISCORD_TEXTS, buildPost, type Look } from './discord-format.ts';
+import { History, type Run } from './history.ts';
 import { Blizzard, Live, slug } from './live.ts';
 import { Logs, WarcraftLogs } from './logs.ts';
 import { DEFAULTS, loadSettings, sanitize, saveSettings } from './settings.ts';
@@ -31,14 +33,25 @@ const notify = () => {
 // Echte Daten nur mit Blizzard-Schlüssel, sonst Beispieldaten
 const blizzard = new Blizzard(process.env.BLIZZARD_CLIENT_ID?.trim() || '', process.env.BLIZZARD_CLIENT_SECRET?.trim() || '');
 const history = new History(join(DATA, 'history.db'));
+const discord = new Discord(history.db, join(DATA, 'discord-webhook'));
 const live = new Live(blizzard, notify, (character, snapshot) => {
-  history.save(character, snapshot);
+  const fresh = history.save(character, snapshot);
+  discord.announce(character, fresh, look(), settings.name.trim()).catch(() => {});
   // Jetzt ist der Realm-Slug von Blizzard bekannt, den Warcraft Logs braucht
   refreshLogs();
 });
 const wantsLive = () => blizzard.enabled && Boolean(settings.name.trim());
 // Warcraft Logs nur mit eigenem Schlüssel und nur für Retail (Forever-Logs liegen woanders)
 const logs = new Logs(new WarcraftLogs(process.env.WCL_CLIENT_ID?.trim() || '', process.env.WCL_CLIENT_SECRET?.trim() || ''), history.db);
+// So sehen die Discord-Posts gerade aus (Stil und Sprache aus dem Editor)
+const look = (): Look => ({
+  lang: settings.discordLang,
+  style: settings.discordStyle,
+  accent: settings.accent,
+  diffColors: settings.diffColors,
+  who: `${settings.name.trim()} · ${settings.realm.trim()} (${settings.region.toUpperCase()})`,
+  logsEnabled: logs.enabled && settings.game === 'retail',
+});
 const refreshLogs = () => {
   if (settings.game !== 'retail' || !settings.name.trim()) return;
   logs.refresh(Live.character(settings), { name: settings.name.trim(), realm: live.realmSlug || slug(settings.realm), region: settings.region });
@@ -126,6 +139,11 @@ app.put('/api/settings', (req, res) => {
 setInterval(() => {
   if (wantsLive()) live.refresh(settings);
   if (wantsLive()) refreshLogs();
+  // Discord: nicht zugestellte Posts erneut senden, Logs in bestehende Posts eintragen
+  if (wantsLive()) {
+    const character = Live.character(settings);
+    discord.work(character, look(), settings.name.trim(), logs.reports(character), (code, fight) => logs.fight(code, fight)).catch(() => {});
+  }
 }, 60_000);
 
 // Echte Daten, sobald ein Charakter gefunden ist, sonst Beispieldaten
@@ -155,6 +173,32 @@ app.get('/api/stats/fight', async (req, res) => {
   if (code === DEMO_CODE) return void res.json(demoFight(fight));
   try {
     res.set('Cache-Control', 'no-store').json(await logs.fight(code, fight));
+  } catch (error) {
+    res.status(502).json({ error: (error as Error).message });
+  }
+});
+
+// Discord-Webhook: der Link bleibt auf dem Server, der Editor erfährt nur, ob einer gesetzt ist
+app.get('/api/discord', (_req, res) => void res.set('Cache-Control', 'no-store').json({ connected: discord.connected }));
+app.put('/api/discord', (req, res) => {
+  try {
+    discord.setUrl(String(req.body?.url ?? ''));
+  } catch {
+    return void res.status(400).json({ error: 'invalid' });
+  }
+  res.json({ connected: discord.connected });
+});
+
+// Testpost mit Beispieldaten im gewählten Stil und in der gewählten Sprache
+app.post('/api/discord/test', async (_req, res) => {
+  if (!discord.connected) return void res.status(409).json({ error: 'notConnected' });
+  const sample = demoHistory();
+  const run = { ...sample.runs[0], at: Date.now() } as Run;
+  const post = buildPost({ kind: 'run', run }, { tries: null, fightMs: run.ms, bestWipe: null, players: demoFight(1) }, { ...look(), logsEnabled: false }, settings.name.trim());
+  post.payload.content = `**${DISCORD_TEXTS[settings.discordLang].testTitle}**\n${DISCORD_TEXTS[settings.discordLang].testNote}`;
+  try {
+    await discord.send(post);
+    res.json({ ok: true });
   } catch (error) {
     res.status(502).json({ error: (error as Error).message });
   }
