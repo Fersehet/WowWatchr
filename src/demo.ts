@@ -41,3 +41,48 @@ export function demoState(settings: Settings) {
     },
   };
 }
+
+// Beispiel-Verlauf für die Statistik-Seite, Namen in allen Sprachen wie bei Blizzard
+const loc = (de: string, en: string, ru: string, fr: string) => ({ de_DE: de, en_US: en, ru_RU: ru, fr_FR: fr });
+const dungeon = (i: number) => loc(NAMES.de.dungeons[i], NAMES.en.dungeons[i], NAMES.ru.dungeons[i], NAMES.fr.dungeons[i]);
+const AFFIXES = [loc('Verstärkt', 'Fortified', 'Укрепленный', 'Fortifié'), loc('Tyrannisch', 'Tyrannical', 'Тиранический', 'Tyrannique')];
+const PARTY = [
+  ['Vaelric', loc('Frost-Magier', 'Frost Mage', 'Маг «Лёд»', 'Mage Givre'), 284],
+  ['Brannox', loc('Schutz-Krieger', 'Protection Warrior', 'Воин «Защита»', 'Guerrier Protection'), 286],
+  ['Lyssia', loc('Heilig-Priester', 'Holy Priest', 'Жрец «Свет»', 'Prêtre Sacré'), 283],
+  ['Kortha', loc('Verwüstung-Dämonenjäger', 'Havoc Demon Hunter', 'Охотник на демонов «Истребление»', 'Chasseur de démons Dévastation'), 285],
+  ['Elowyn', loc('Wiederherstellung-Druide', 'Restoration Druid', 'Друид «Исцеление»', 'Druide Restauration'), 282],
+] as const;
+const LIMITS = [1_980_000, 1_680_000, 1_920_000, 2_100_000, 2_040_000];
+const DAY = 86_400_000;
+
+export function demoHistory() {
+  const now = Date.now();
+  const ms = (time: string) => time.split(':').reduce((m, part) => m * 60 + Number(part), 0) * 1000;
+  return {
+    demo: true,
+    runs: RUNS.map((run, i) => ({
+      at: now - (i * 1.5 + 0.5) * DAY,
+      dungeonId: i + 1,
+      dungeon: dungeon(i),
+      key: run.key,
+      ms: ms(run.time),
+      limit: LIMITS[i],
+      result: run.result,
+      rating: 300 - i * 6.5 - (run.result < 0 ? 25 : 0),
+      affixes: [AFFIXES[i % 2]],
+      members: PARTY.map(([name, spec, ilvl]) => ({ name, spec, ilvl: ilvl - i })),
+    })),
+    kills: [],
+    raids: [{
+      id: 1,
+      name: loc('Beispielraid', 'Sample raid', 'Пример рейда', "Raid d'exemple"),
+      bosses: [9, 9, 9, 4, 4, 2].map((last, i) => ({
+        id: i + 1,
+        name: loc(`Boss ${i + 1}`, `Boss ${i + 1}`, `Босс ${i + 1}`, `Boss ${i + 1}`),
+        kills: { normal: 3, heroic: 5 - Math.floor(i / 2), mythic: i < 4 ? 2 : 0 },
+        last: now - last * 0.4 * DAY,
+      })),
+    }],
+  };
+}
