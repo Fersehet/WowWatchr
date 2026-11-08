@@ -1,5 +1,6 @@
 import { LANGS, TEXTS } from './i18n.js';
 import { PAGES, SIZES } from './render.js';
+import { loadStats, renderStats } from './stats.js';
 
 const $ = (id) => document.getElementById(id);
 const DEFAULT_ACCENT = '#ffd100';
@@ -109,8 +110,9 @@ function drawControls() {
   $('links').replaceChildren(linkRow(t.linkRotate, '/overlay'), ...PAGES.map((page) => linkRow(t[page], `/overlay/${page}`)));
   $('obsHint').textContent = t.obsHint.replace('{w}', w).replace('{h}', h);
 
-  $('tabs').setAttribute('aria-label', t.preview);
-  $('tabs').replaceChildren(...['', ...PAGES].map((page) => {
+  $('rail').setAttribute('aria-label', t.aViews);
+  $('pagePicker').setAttribute('aria-label', t.preview);
+  $('pagePicker').replaceChildren(...['', ...PAGES].map((page) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.setAttribute('aria-pressed', page === previewPage);
@@ -121,7 +123,8 @@ function drawControls() {
     });
     return button;
   }));
-  drawPreview();
+  if (tab === 'stats') renderStats(uiLang);
+  else drawPreview();
 }
 
 function drawPreview() {
@@ -147,6 +150,102 @@ function drawPreview() {
   stage.style.height = `${h * scale + 2 * margin}px`;
 }
 
+// ---------- Ansichten: Overlay und Statistiken, wie bei FaceitWatchr ----------
+
+let tab = 'overlay';
+const VIEWS = ['overlay', 'stats'];
+const viewOf = (name) => $(name === 'stats' ? 'statsView' : 'overlayView');
+let switching = null;
+
+// Wechsel wie ein Scroll: alte Ansicht gleitet nach oben weg, neue kommt von unten (rückwärts umgekehrt)
+function slide(from, to) {
+  const dir = VIEWS.indexOf(to) > VIEWS.indexOf(from) ? 1 : -1;
+  const out = viewOf(from);
+  const into = viewOf(to);
+  switching?.cancel();
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !out.animate) {
+    out.hidden = true;
+    showView(into);
+    return;
+  }
+  const anim = out.animate(
+    [{ transform: 'none', opacity: 1, filter: 'blur(0)' }, { transform: `translateY(${-dir * 60}px)`, opacity: 0, filter: 'blur(4px)' }],
+    { duration: 220, easing: 'cubic-bezier(.5, 0, .2, 1)' },
+  );
+  switching = anim;
+  anim.finished.then(() => {
+    out.hidden = true;
+    showView(into);
+    switching = into.animate(
+      [{ transform: `translateY(${dir * 80}px)`, opacity: 0, filter: 'blur(4px)' }, { transform: 'none', opacity: 1, filter: 'blur(0)' }],
+      { duration: 380, easing: 'cubic-bezier(.2, .8, .3, 1)' },
+    );
+  }, () => {});
+}
+
+// Die Vorschau misst ihre Fläche, also erst zeichnen, wenn die Overlay-Ansicht sichtbar ist
+function showView(view) {
+  view.hidden = false;
+  if (view.id === 'overlayView') drawPreview();
+}
+
+function setTab(next, animate = true) {
+  const prev = tab;
+  tab = next === 'stats' ? 'stats' : 'overlay';
+  for (const button of document.querySelectorAll('.tabs [data-tab]')) button.setAttribute('aria-selected', String(button.dataset.tab === tab));
+  for (const link of document.querySelectorAll('.rail [data-tab]')) {
+    link.classList.toggle('active', link.dataset.tab === tab);
+    link.classList.toggle('passed', VIEWS.indexOf(link.dataset.tab) < VIEWS.indexOf(tab));
+    link.toggleAttribute('aria-current', link.dataset.tab === tab);
+  }
+  $('rail').style.setProperty('--fill', String(VIEWS.indexOf(tab) / (VIEWS.length - 1)));
+  if (animate && prev !== tab) slide(prev, tab);
+  else {
+    viewOf(tab === 'stats' ? 'overlay' : 'stats').hidden = true;
+    showView(viewOf(tab));
+  }
+  history.replaceState(null, '', tab === 'stats' ? '#stats' : location.pathname + location.search);
+  if (tab === 'stats') loadStats(uiLang);
+}
+
+for (const button of document.querySelectorAll('.tabs [data-tab]')) button.addEventListener('click', () => setTab(button.dataset.tab));
+for (const link of document.querySelectorAll('.rail [data-tab]')) {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    setTab(link.dataset.tab);
+  });
+}
+
+// Mausrad wechselt die Ansicht wie bei FaceitWatchr: über der Vorschau nach unten = Statistiken,
+// in den Statistiken ganz oben nach oben = Overlay. Die Seitenleiste scrollt weiter normal.
+const wheelWide = matchMedia('(min-width: 1100px)');
+let wheelSum = 0;
+let wheelLock = 0;
+let wheelReset = 0;
+document.addEventListener('wheel', (e) => {
+  if (!wheelWide.matches || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+  if (e.target.closest('input, select, textarea, aside, .page-picker')) return;
+  const down = e.deltaY > 0;
+  const want =
+    tab === 'overlay' && down && e.target.closest('.preview-area') ? 'stats'
+    : tab === 'stats' && !down && $('statsView').scrollTop <= 0 ? 'overlay'
+    : null;
+  if (!want) {
+    wheelSum = 0;
+    return;
+  }
+  e.preventDefault();
+  if (Date.now() < wheelLock) return;
+  // Kleine Trackpad-Bewegungen sammeln, damit nicht jeder Hauch umschaltet
+  wheelSum += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+  clearTimeout(wheelReset);
+  wheelReset = setTimeout(() => (wheelSum = 0), 250);
+  if (Math.abs(wheelSum) < 60) return;
+  wheelSum = 0;
+  wheelLock = Date.now() + 900;
+  setTab(want);
+}, { passive: false });
+
 $('editorLang').addEventListener('change', (e) => {
   uiLang = e.target.value;
   localStorage.setItem('lang', uiLang);
@@ -166,9 +265,13 @@ $('logout').addEventListener('click', async () => {
 });
 new ResizeObserver(drawPreview).observe($('stage').parentElement);
 
+setTab(location.hash === '#stats' ? 'stats' : 'overlay', false);
 drawControls();
 loadStatus();
-new EventSource('/api/events').addEventListener('settings', loadStatus);
+new EventSource('/api/events').addEventListener('settings', () => {
+  loadStatus();
+  if (tab === 'stats') loadStats(uiLang);
+});
 const me = await fetch('/api/me').then((r) => r.json()).catch(() => null);
 if (me?.user) $('accountName').textContent = me.user;
 // Ohne Login (kein Passwort in der .env) gibt es nichts zum Abmelden
