@@ -81,6 +81,7 @@ function drawControls() {
   // Forever hat keine Realms, dort heißt das Feld Nachname
   $('realmLabel').textContent = settings.game === 'forever' ? t.surname : t.realm;
   $('accent').value = settings.accent;
+  $('diffColors').value = settings.diffColors ? 'on' : 'off';
   // Beim Tippen den Cursor nicht verlieren
   for (const id of ['name', 'realm', 'interval']) if (document.activeElement !== $(id)) $(id).value = settings[id];
 
@@ -258,6 +259,7 @@ $('region').addEventListener('change', (e) => save({ region: e.target.value }));
 $('game').addEventListener('change', (e) => save({ game: e.target.value }));
 $('interval').addEventListener('change', (e) => save({ interval: Number(e.target.value) }));
 $('accent').addEventListener('input', (e) => save({ accent: e.target.value }));
+$('diffColors').addEventListener('change', (e) => save({ diffColors: e.target.value === 'on' }));
 $('accentReset').addEventListener('click', () => save({ accent: DEFAULT_ACCENT }));
 $('logout').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST' });

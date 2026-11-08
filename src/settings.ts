@@ -19,6 +19,7 @@ export interface Settings {
   interval: number;
   lang: Lang;
   accent: string;
+  diffColors: boolean; // Schwierigkeiten in Grün/Blau/Lila statt in der Akzentfarbe
 }
 
 export const DEFAULTS: Settings = {
@@ -31,6 +32,7 @@ export const DEFAULTS: Settings = {
   interval: 10,
   lang: 'en',
   accent: '#ffd100',
+  diffColors: true,
 };
 
 function text(value: unknown, fallback: string): string {
@@ -58,6 +60,7 @@ export function sanitize(input: unknown): Settings {
     interval: Number.isFinite(interval) ? Math.min(120, Math.max(3, Math.round(interval))) : DEFAULTS.interval,
     lang: LANGS.includes(raw.lang) ? raw.lang : DEFAULTS.lang,
     accent: typeof raw.accent === 'string' && /^#[0-9a-f]{6}$/i.test(raw.accent) ? raw.accent : DEFAULTS.accent,
+    diffColors: raw.diffColors !== false,
   };
 }
 
