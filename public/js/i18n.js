@@ -5,7 +5,7 @@ export const TEXTS = {
   de: {
     discord: 'Discord', discordHook: 'Webhook-Link', discordSave: 'Verbinden', discordRemove: 'Trennen', discordOn: 'Verbunden. Der Link bleibt auf dem Server.', discordOff: 'Nicht verbunden.', discordInvalid: 'Das ist kein Discord-Webhook-Link.',
     discordStyle: 'Aussehen', discordTable: 'Tabelle (Text)', discordTiles: 'Kacheln (Bild)', discordMix: 'Mix (Bild mit Tabelle)', discordLang: 'Sprache der Posts', discordTest: 'Testpost senden', discordTestOk: 'Testpost gesendet.', discordTestFail: 'Testpost fehlgeschlagen, Link prüfen.',
-    discordHint: 'Discord: Kanal bearbeiten → Integrationen → Webhooks → Neuer Webhook → Webhook-URL kopieren. Gepostet werden neue Bestwerte im Dungeon und jeder Boss-Kill.',
+    discordHint: 'Discord: Kanal bearbeiten → Integrationen → Webhooks → Neuer Webhook → Webhook-URL kopieren. Gepostet werden neue Bestwerte im Dungeon, jeder Boss-Kill und mit Warcraft Logs jeder geloggte Run.',
     design: 'Design',
     stLogs: 'Warcraft Logs', stLogsError: 'Warcraft Logs gerade nicht erreichbar.', stNoLogStats: 'Keine Spielerwerte in diesem Log.',
     stDps: 'DPS', stHps: 'HPS', stHours: '{t} Std.', stPlayer: 'Spieler', stDeaths: 'Tode', stInterrupts: 'Unterbrechungen', stParse: 'Parse', stRaidLength: 'Raid-Dauer', stTries: 'Versuche', stWipes: 'Wipes',
@@ -41,7 +41,7 @@ export const TEXTS = {
   en: {
     discord: 'Discord', discordHook: 'Webhook link', discordSave: 'Connect', discordRemove: 'Disconnect', discordOn: 'Connected. The link stays on the server.', discordOff: 'Not connected.', discordInvalid: "That's not a Discord webhook link.",
     discordStyle: 'Look', discordTable: 'Table (text)', discordTiles: 'Tiles (picture)', discordMix: 'Mix (picture with table)', discordLang: 'Language of the posts', discordTest: 'Send test post', discordTestOk: 'Test post sent.', discordTestFail: 'Test post failed, check the link.',
-    discordHint: 'Discord: Edit channel → Integrations → Webhooks → New webhook → Copy webhook URL. Posts go out for every new best dungeon run and every boss kill.',
+    discordHint: 'Discord: Edit channel → Integrations → Webhooks → New webhook → Copy webhook URL. Posts go out for every new best dungeon run, every boss kill and, with Warcraft Logs, every logged run.',
     design: 'Design',
     stLogs: 'Warcraft Logs', stLogsError: "Warcraft Logs can't be reached right now.", stNoLogStats: 'No player stats in this log.',
     stDps: 'DPS', stHps: 'HPS', stHours: '{t} h', stPlayer: 'Player', stDeaths: 'Deaths', stInterrupts: 'Interrupts', stParse: 'Parse', stRaidLength: 'Raid length', stTries: 'Tries', stWipes: 'Wipes',
@@ -77,7 +77,7 @@ export const TEXTS = {
   ru: {
     discord: 'Discord', discordHook: 'Ссылка вебхука', discordSave: 'Подключить', discordRemove: 'Отключить', discordOn: 'Подключено. Ссылка хранится только на сервере.', discordOff: 'Не подключено.', discordInvalid: 'Это не ссылка вебхука Discord.',
     discordStyle: 'Вид', discordTable: 'Таблица (текст)', discordTiles: 'Плитки (картинка)', discordMix: 'Микс (картинка с таблицей)', discordLang: 'Язык постов', discordTest: 'Отправить тестовый пост', discordTestOk: 'Тестовый пост отправлен.', discordTestFail: 'Тестовый пост не отправлен, проверь ссылку.',
-    discordHint: 'Discord: Настроить канал → Интеграция → Вебхуки → Новый вебхук → Копировать URL вебхука. Посты появляются после каждого нового рекорда в подземелье и каждого убитого босса.',
+    discordHint: 'Discord: Настроить канал → Интеграция → Вебхуки → Новый вебхук → Копировать URL вебхука. Посты появляются после каждого нового рекорда в подземелье, каждого убитого босса и, с Warcraft Logs, каждого залогированного забега.',
     design: 'Оформление',
     stLogs: 'Warcraft Logs', stLogsError: 'Warcraft Logs сейчас недоступен.', stNoLogStats: 'В этом логе нет данных игроков.',
     stDps: 'УВС', stHps: 'ИВС', stHours: '{t} ч', stPlayer: 'Игрок', stDeaths: 'Смерти', stInterrupts: 'Прерывания', stParse: 'Парс', stRaidLength: 'Длительность рейда', stTries: 'Попытки', stWipes: 'Вайпы',
@@ -113,7 +113,7 @@ export const TEXTS = {
   fr: {
     discord: 'Discord', discordHook: 'Lien du webhook', discordSave: 'Connecter', discordRemove: 'Déconnecter', discordOn: 'Connecté. Le lien reste sur le serveur.', discordOff: 'Non connecté.', discordInvalid: "Ce n'est pas un lien de webhook Discord.",
     discordStyle: 'Apparence', discordTable: 'Tableau (texte)', discordTiles: 'Tuiles (image)', discordMix: 'Mix (image avec tableau)', discordLang: 'Langue des messages', discordTest: 'Envoyer un message de test', discordTestOk: 'Message de test envoyé.', discordTestFail: "Échec du message de test, vérifie le lien.",
-    discordHint: "Discord : Modifier le salon → Intégrations → Webhooks → Nouveau webhook → Copier l'URL du webhook. Un message part à chaque nouveau record en donjon et à chaque boss vaincu.",
+    discordHint: "Discord : Modifier le salon → Intégrations → Webhooks → Nouveau webhook → Copier l'URL du webhook. Un message part à chaque nouveau record en donjon, à chaque boss vaincu et, avec Warcraft Logs, à chaque donjon enregistré dans un log.",
     design: 'Apparence',
     stLogs: 'Warcraft Logs', stLogsError: 'Warcraft Logs est injoignable pour le moment.', stNoLogStats: 'Aucune donnée de joueur dans ce log.',
     stDps: 'DPS', stHps: 'HPS', stHours: '{t} h', stPlayer: 'Joueur', stDeaths: 'Morts', stInterrupts: 'Interruptions', stParse: 'Parse', stRaidLength: 'Durée du raid', stTries: 'Essais', stWipes: 'Wipes',
