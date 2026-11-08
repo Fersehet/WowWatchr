@@ -86,6 +86,8 @@ WowWatchr loads your character from the official Blizzard API. For that you need
 5. Restart the server. A new key can take up to 15 minutes to start working.
 6. Type your character's **name**, **realm** and **region** into the editor. The status at the top of the editor shows whether real data is running.
 
+**WoW Forever (test):** pick **Forever** under **Game** and enter your character's **surname** instead of a realm. The same Blizzard key works. Blizzard has not documented the Forever API yet, so this can break when Blizzard changes it. Players report that a Forever character shows up only from level 10 and after you log out once.
+
 The keys stay on your server; OBS and the overlay never see them. WowWatchr refreshes the data every five minutes. Blizzard updates a character when you log out, so new runs and kills show up after that. Best parses need Warcraft Logs and are not shown yet.
 
 ## Adding it to OBS
