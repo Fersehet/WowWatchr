@@ -257,3 +257,17 @@ test('ohne Verbinden nach dem Update werden alte Runs aus Logs nicht nachgeholt'
   await discord.work('c', LOOK, 'Vaelric', [report], async () => [{ name: 'Vaelric', dps: 1, hps: 1, deaths: 0, interrupts: 0, parse: 1 }]);
   assert.equal(calls.length, 0);
 });
+
+test('der eigene Charakter bleibt in den Top 5, auch wenn der Name im Editor klein geschrieben ist', () => {
+  const players = ['A', 'B', 'C', 'D', 'E', 'Vaelric'].map((name, i) => ({ name, dps: 600_000 - i * 1_000, hps: 0, deaths: 0, interrupts: 0, parse: null }));
+  const post = buildPost({ kind: 'run', run: run(1, 14) }, { tries: null, fightMs: 1, bestWipe: null, players }, LOOK, 'vaelric');
+  const text = (post.payload.embeds as { description: string }[])[0].description;
+  assert.match(text, /Vaelric/);
+  assert.doesNotMatch(text, /^E /m);
+});
+
+test('knapp unter einer Million steht 1M statt 1000k', () => {
+  const players = [{ name: 'Vaelric', dps: 999_700, hps: 999_400, deaths: 0, interrupts: 0, parse: null }];
+  const post = buildPost({ kind: 'run', run: run(1, 14) }, { tries: null, fightMs: 1, bestWipe: null, players }, LOOK, 'Vaelric');
+  assert.match((post.payload.embeds as { description: string }[])[0].description, /Vaelric +1M +999k/);
+});

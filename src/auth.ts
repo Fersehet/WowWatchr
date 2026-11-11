@@ -106,7 +106,12 @@ function loadOrCreateSecret(file: string) {
 function readCookie(req: Request, name: string) {
   for (const part of (req.headers.cookie ?? '').split(';')) {
     const [k, ...v] = part.trim().split('=');
-    if (k === name) return decodeURIComponent(v.join('='));
+    if (k !== name) continue;
+    try {
+      return decodeURIComponent(v.join('='));
+    } catch {
+      return null; // kaputtes Cookie = nicht angemeldet
+    }
   }
   return null;
 }
