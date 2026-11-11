@@ -26,8 +26,8 @@ export function demoState(settings: Settings) {
       score: 2847,
       scorePct: 69,
       bestKey: 14,
-      timed: 38,
-      total: 44,
+      timed: 7,
+      total: 8,
       runs: RUNS.map((run, i) => ({ ...run, name: names.dungeons[i] })),
     },
     raid: {

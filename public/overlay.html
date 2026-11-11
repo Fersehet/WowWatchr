@@ -31,7 +31,8 @@
         draw();
       }
 
-      await load();
+      // Läuft der Server beim Start von OBS noch nicht, so lange neu versuchen
+      while (!(await load().then(() => true, () => false))) await new Promise((r) => setTimeout(r, 3000));
 
       setInterval(() => {
         if (currentPage() === shown || container.classList.contains('fading')) return;

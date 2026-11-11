@@ -14,8 +14,9 @@
   --glow: rgba(255, 209, 0, .45);
   --danger: #ff6b6b;
   --up: #46d3b0;
-  --f-display: 'Chakra Petch', 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
-  --f-body: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  /* Chakra Petch und Barlow haben kein Kyrillisch: Russisch läuft in Geist, der Schrift des Overlays */
+  --f-display: 'Chakra Petch', 'Rajdhani', 'Geist', 'Segoe UI', system-ui, sans-serif;
+  --f-body: 'Barlow', 'Geist', 'Segoe UI', system-ui, sans-serif;
   --f-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
   color-scheme: dark;
 }
