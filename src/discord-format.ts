@@ -88,7 +88,7 @@ const mmss = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 const short = (n: number, lang: Lang) =>
-  n >= 1e6 ? `${(n / 1e6).toLocaleString(NUM_LOCALES[lang], { maximumFractionDigits: 2 })}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(Math.round(n));
+  n >= 999_500 ? `${(n / 1e6).toLocaleString(NUM_LOCALES[lang], { maximumFractionDigits: 2 })}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(Math.round(n));
 
 /** Alles, was beide Stile zeigen: Titel, Farbe, Kennzahlen, Spieler */
 function facts(event: Event, log: LogInfo | null, look: Look) {
@@ -142,10 +142,13 @@ function facts(event: Event, log: LogInfo | null, look: Look) {
   };
 }
 
+// Der Name im Editor muss nicht genau wie bei Blizzard geschrieben sein
+const isMe = (name: string, me: string) => name.toLowerCase() === me.toLowerCase();
+
 /** Die besten 5 nach Schaden, der eigene Charakter immer dabei */
 function top(players: PlayerStats[], me: string) {
   const list = players.slice(0, 5);
-  const mine = players.find((p) => p.name === me);
+  const mine = players.find((p) => isMe(p.name, me));
   if (mine && !list.includes(mine)) list[4] = mine;
   return list;
 }
@@ -254,7 +257,7 @@ export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: stri
     for (const c of cols) text(c.x, y + 14, c.k.toUpperCase(), 12, '#8b90a0', 600, 'middle');
     y += 26;
     list.forEach((p, i) => {
-      const mine = p.name === me;
+      const mine = isMe(p.name, me);
       // Jede Zeile gleich: eine Fläche, alle Werte auf einer Linie
       out.push(`<rect x="${P}" y="${y}" width="${W - 2 * P}" height="40" rx="6" fill="${mine ? '#1b1f28' : '#151820'}"/>`);
       text(P + 14, y + 26, fit(p.name, 16, 260), 16, mine ? f.color : '#e6e6ea', 600);
@@ -283,7 +286,7 @@ export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: stri
     const list = top(log.players, me);
     const max = Math.max(1, ...list.map((p) => p.dps));
     for (const p of list) {
-      const mine = p.name === me;
+      const mine = isMe(p.name, me);
       const bx = P + 150;
       const bw = W - 2 * P - 150 - 80;
       text(P, y + 15, fit(p.name, 16, 140), 16, mine ? f.color : '#e6e6ea', 600);
@@ -304,7 +307,7 @@ export function tilesSvg(event: Event, log: LogInfo | null, look: Look, me: stri
     y += 30 + 24;
   } else if (f.group.length) {
     for (const m of f.group) {
-      text(P, y + 15, fit(m.name, 16, 200), 16, m.name === me ? f.color : '#e6e6ea', 600);
+      text(P, y + 15, fit(m.name, 16, 200), 16, isMe(m.name, me) ? f.color : '#e6e6ea', 600);
       text(P + 210, y + 15, fit(m.spec, 15, W - 2 * P - 290), 15, '#8b90a0');
       text(W - P, y + 15, String(m.ilvl), 15, '#e6e6ea', 600, 'end');
       y += 28;

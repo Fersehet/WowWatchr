@@ -59,7 +59,12 @@ function linkRow(label, path) {
   const button = row.querySelector('button');
   button.textContent = t.copy;
   button.addEventListener('click', async () => {
-    await navigator.clipboard.writeText(url);
+    // Ohne https (z. B. über die IP im Netzwerk) gibt der Browser die Zwischenablage nicht frei
+    if (navigator.clipboard) await navigator.clipboard.writeText(url);
+    else {
+      row.querySelector('input').select();
+      document.execCommand('copy');
+    }
     button.textContent = t.copied;
     setTimeout(() => (button.textContent = t.copy), 1500);
   });

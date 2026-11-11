@@ -130,7 +130,7 @@ const LAYOUTS = {
         ${AVATAR(96, v.t.portrait, v.c.avatar)}
         <div style="font-size:26px;font-weight:700;margin-top:12px;line-height:1.1">${v.c.name}</div>
         <div style="font-size:14px;color:#d3d7df;margin-top:4px">${v.c.spec}</div>
-        <div style="font-size:13px;color:#b1b7c3;margin-top:2px">${v.c.guild} · ${v.c.realm}</div>
+        <div style="font-size:13px;color:#b1b7c3;margin-top:2px">${[v.c.guild, v.c.realm].filter(Boolean).join(' · ')}</div>
       </div>
       <div class="line"><span class="lbl">${v.t.ilvl}</span><span class="big accent">${v.c.ilvl}</span></div>
       <div class="line"><span class="lbl">${v.t.score}</span><span class="big accent">${v.score}</span></div>

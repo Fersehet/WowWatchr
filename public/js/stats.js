@@ -159,8 +159,8 @@ function statsTable(t, code, fight) {
   </tbody></table></div>`;
 }
 
-// Farben wie bei Warcraft Logs: grau, grün, blau, lila, orange, gold
-const parseColor = (p) => (p >= 99 ? '#e5cc80' : p >= 95 ? '#ff8000' : p >= 75 ? '#a335ee' : p >= 50 ? '#0070ff' : p >= 25 ? '#1eff00' : '#9d9d9d');
+// Farben wie bei Warcraft Logs: grau, grün, blau, lila, orange, pink, gold
+const parseColor = (p) => (p >= 100 ? '#e5cc80' : p >= 99 ? '#e268a8' : p >= 95 ? '#ff8000' : p >= 75 ? '#a335ee' : p >= 50 ? '#0070ff' : p >= 25 ? '#1eff00' : '#9d9d9d');
 
 /** Lädt die Spielerwerte für alle sichtbaren Platzhalter in einer aufgeklappten Zeile */
 function loadFightStats(root) {
