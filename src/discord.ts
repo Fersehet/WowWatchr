@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
 import { buildPost, pick, type Event, type LogInfo, type Look, type Post } from './discord-format.ts';
 import type { Difficulty, NewKill, Run } from './history.ts';
-import type { Fight, PlayerStats, Report } from './logs.ts';
+import { fightLink, type Fight, type PlayerStats, type Report } from './logs.ts';
 
 /**
  * Discord-Posts über einen Webhook: ein Post pro neuem Bestwert oder Boss-Kill, sofort.
@@ -165,7 +165,7 @@ export class Discord {
         if (found) {
           // Warcraft Logs gerade nicht erreichbar oder noch leer: beim nächsten Durchlauf erneut versuchen
           const players = await stats(found.code, found.fight).catch(() => []);
-          if (players.length) log = { ...found.info, players };
+          if (players.length) log = { ...found.info, players, link: fightLink(found.code, found.fight) };
           else if ((row.message || isLogged(event)) && !stale) continue;
         }
         // Ein Log von jemand anderem kann Runs ohne den eigenen Charakter enthalten: die nicht posten
