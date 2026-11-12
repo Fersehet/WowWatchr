@@ -73,7 +73,7 @@ function isPublic(req: Request) {
     [
       '/api/settings', '/api/state', '/api/events',
       '/login.html', '/css/editor.css', '/css/overlay.css', '/js/render.js', '/js/i18n.js',
-      '/favicon.svg', '/logo.svg', '/logo-wordmark.svg',
+      '/favicon.svg', '/logo.svg', '/logo-wordmark.svg', '/img/sample-portrait.svg',
     ].includes(req.path)
   );
 }

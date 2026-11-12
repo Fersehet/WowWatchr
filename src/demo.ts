@@ -20,7 +20,7 @@ export function demoState(settings: Settings) {
   const names = NAMES[settings.lang];
   return {
     demo: true,
-    character: { name: settings.name, realm: settings.realm, guild: 'Silent Vigil', spec: names.spec, ilvl: 284 },
+    character: { name: settings.name, realm: settings.realm, guild: 'Silent Vigil', spec: names.spec, ilvl: 284, avatar: '/img/sample-portrait.svg' },
     stats: { crit: 24, haste: 31, mastery: 46, versatility: 8 },
     mplus: {
       score: 2847,
