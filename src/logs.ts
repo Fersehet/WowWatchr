@@ -14,6 +14,9 @@ const ORIGIN = 'https://www.warcraftlogs.com';
 const FINAL_AFTER_MS = 6 * 60 * 60 * 1000;
 const REFRESH_MS = 10 * 60 * 1000;
 
+/** Link zu genau diesem Kampf im Warcraft-Logs-Report */
+export const fightLink = (code: string, fight: number) => `${ORIGIN}/reports/${encodeURIComponent(code)}#fight=${fight}`;
+
 export interface Fight {
   id: number;
   name: string;

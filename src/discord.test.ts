@@ -102,6 +102,8 @@ test('kommt das Log, wird derselbe Post um Versuche und Spielerwerte ergänzt', 
   assert.match(embed.description, /Vaelric +512k/);
   assert.match(embed.description, /Top HPS: \*\*Lyssia 403k\*\*/);
   assert.doesNotMatch(embed.description, /follow/);
+  // Der Titel führt direkt zum Kill im Log
+  assert.equal(embed.url, 'https://www.warcraftlogs.com/reports/AbCdEfGhIjKlMnOp#fight=3');
 
   // Fertig: wird nicht nochmal bearbeitet
   await discord.work('c', LOOK, 'Vaelric', [report], stats);
@@ -270,4 +272,16 @@ test('knapp unter einer Million steht 1M statt 1000k', () => {
   const players = [{ name: 'Vaelric', dps: 999_700, hps: 999_400, deaths: 0, interrupts: 0, parse: null }];
   const post = buildPost({ kind: 'run', run: run(1, 14) }, { tries: null, fightMs: 1, bestWipe: null, players }, LOOK, 'Vaelric');
   assert.match((post.payload.embeds as { description: string }[])[0].description, /Vaelric +1M +999k/);
+});
+
+test('der Titel verlinkt in allen drei Looks auf den Kampf in Warcraft Logs, ohne Log gibt es keinen Link', () => {
+  const players = [{ name: 'Vaelric', dps: 512_400, hps: 8_100, deaths: 0, interrupts: 4, parse: 96 }];
+  const link = 'https://www.warcraftlogs.com/reports/AbCd#fight=7';
+  for (const style of ['table', 'tiles', 'mix'] as const) {
+    const look = { ...LOOK, style };
+    const withLog = buildPost({ kind: 'run', run: run(1, 14) }, { tries: null, fightMs: 1, bestWipe: null, players, link }, look, 'Vaelric');
+    assert.equal((withLog.payload as any).embeds[0].url, link, style);
+    const noLog = buildPost({ kind: 'run', run: run(1, 14) }, null, look, 'Vaelric');
+    assert.equal((noLog.payload as any).embeds[0].url, undefined, style);
+  }
 });

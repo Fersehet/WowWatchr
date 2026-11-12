@@ -115,7 +115,7 @@ With an optional Warcraft Logs key, the Statistics page also shows tries, best t
 
 ## Discord
 
-WowWatchr can post your results in a Discord channel: one post for every new best dungeon run and one for every boss kill, right when Blizzard reports it. With Warcraft Logs, the same post is filled in later with tries, fight time, best wipe and DPS, HPS, deaths, interrupts and parse of every player, and every other dungeon run that was logged and uploaded gets its own post too. Runs and player stats are saved on your server. No bot is needed, a webhook is enough.
+WowWatchr can post your results in a Discord channel: one post for every new best dungeon run and one for every boss kill, right when Blizzard reports it. With Warcraft Logs, the same post is filled in later with tries, fight time, best wipe and DPS, HPS, deaths, interrupts and parse of every player, its title links straight to the fight in Warcraft Logs, and every other dungeon run that was logged and uploaded gets its own post too. Runs and player stats are saved on your server. No bot is needed, a webhook is enough.
 
 1. In Discord, open the channel settings: **Edit channel → Integrations → Webhooks → New webhook**, then **Copy webhook URL**.
 2. In the editor under **Discord**, paste the link and click **Connect**. The link stays on your server and is never shown again.

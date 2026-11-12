@@ -21,6 +21,7 @@ export interface LogInfo {
   fightMs: number;
   bestWipe: number | null; // Prozent, bei Bossen mit Wipes
   players: PlayerStats[];
+  link?: string; // Warcraft-Logs-Link zum Kampf; ältere gespeicherte Posts haben keinen
 }
 
 export interface Look {
@@ -193,6 +194,7 @@ function table(event: Event, log: LogInfo | null, look: Look, me: string): Post 
         color: parseInt(f.color.slice(1), 16),
         author: { name: look.who },
         title: f.title,
+        ...(log?.link ? { url: log.link } : {}),
         description: lines.join('\n'),
         footer: { text: log ? t.footerLogs : t.footer },
         timestamp: new Date(event.kind === 'run' ? event.run.at : event.kill.at).toISOString(),
@@ -336,6 +338,7 @@ function tiles(event: Event, log: LogInfo | null, look: Look, me: string): Post 
         color: parseInt(f.color.slice(1), 16),
         author: { name: look.who },
         title: f.title,
+        ...(log?.link ? { url: log.link } : {}),
         image: { url: 'attachment://wowwatchr.png' },
         footer: { text: log ? t.footerLogs : t.footer },
         timestamp: new Date(event.kind === 'run' ? event.run.at : event.kill.at).toISOString(),
