@@ -19,6 +19,8 @@ export interface Settings {
   pages: { character: boolean; mplus: boolean; raid: boolean };
   interval: number;
   scale: number; // Größe des Overlays in Prozent, z. B. 133 für 1440p
+  opacity: number | null; // Deckkraft des Hintergrunds in Prozent, null = Standard des Layouts
+  bgColor: string | null; // Farbe des Hintergrunds, null = Standard des Layouts
   lang: Lang;
   accent: string;
   diffColors: boolean; // Schwierigkeiten in Grün/Blau/Lila statt in der Akzentfarbe
@@ -35,6 +37,8 @@ export const DEFAULTS: Settings = {
   pages: { character: true, mplus: true, raid: true },
   interval: 10,
   scale: 100,
+  opacity: null,
+  bgColor: null,
   lang: 'en',
   accent: '#ffd100',
   diffColors: true,
@@ -58,6 +62,7 @@ export function sanitize(input: unknown): Settings {
   if (!pages.character && !pages.mplus && !pages.raid) pages.character = true;
   const interval = Number(raw.interval);
   const scale = Number(raw.scale);
+  const opacity = raw.opacity === null || raw.opacity === undefined || raw.opacity === '' ? NaN : Number(raw.opacity);
   return {
     layout: LAYOUTS.includes(raw.layout) ? raw.layout : DEFAULTS.layout,
     name: text(raw.name, DEFAULTS.name),
@@ -67,6 +72,8 @@ export function sanitize(input: unknown): Settings {
     pages,
     interval: Number.isFinite(interval) ? Math.min(120, Math.max(3, Math.round(interval))) : DEFAULTS.interval,
     scale: Number.isFinite(scale) ? Math.min(300, Math.max(50, Math.round(scale))) : DEFAULTS.scale,
+    opacity: Number.isFinite(opacity) ? Math.min(100, Math.max(0, Math.round(opacity))) : DEFAULTS.opacity,
+    bgColor: typeof raw.bgColor === 'string' && /^#[0-9a-f]{6}$/i.test(raw.bgColor) ? raw.bgColor : DEFAULTS.bgColor,
     lang: LANGS.includes(raw.lang) ? raw.lang : DEFAULTS.lang,
     accent: typeof raw.accent === 'string' && /^#[0-9a-f]{6}$/i.test(raw.accent) ? raw.accent : DEFAULTS.accent,
     diffColors: raw.diffColors !== false,

@@ -3,6 +3,14 @@ import { TEXTS } from './i18n.js';
 
 export const SIZES = { a: [640, 270], c: [1060, 84], d: [300, 590] };
 export const PAGES = ['character', 'mplus', 'raid'];
+// Farbe und Deckkraft (%) des Hintergrunds, wenn im Editor nichts eingestellt ist
+export const BACKGROUND = { a: ['#14161c', 94], c: ['#12141a', 74], d: ['#0f1116', 100] };
+
+function background(settings) {
+  const [color, opacity] = BACKGROUND[settings.layout];
+  const [r, g, b] = (settings.bgColor ?? color).match(/\w\w/g).map((h) => parseInt(h, 16));
+  return `rgba(${r},${g},${b},${(settings.opacity ?? opacity) / 100})`;
+}
 
 const esc = (value) => String(value).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const MARK = (size) => `<img src="/logo.svg" alt="" width="${size}" height="${size}">`;
@@ -168,5 +176,5 @@ const LAYOUTS = {
 
 export function renderPage(container, settings, state, page) {
   const inner = LAYOUTS[settings.layout][page](view(state, settings.lang, settings.game));
-  container.innerHTML = `<div class="ov ${settings.layout}${settings.diffColors && settings.game !== 'forever' ? ' qc' : ''}" lang="${settings.lang}" style="--accent:${settings.accent}">${inner}</div>`;
+  container.innerHTML = `<div class="ov ${settings.layout}${settings.diffColors && settings.game !== 'forever' ? ' qc' : ''}" lang="${settings.lang}" style="--accent:${settings.accent};--card:${background(settings)}">${inner}</div>`;
 }

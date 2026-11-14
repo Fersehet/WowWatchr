@@ -109,6 +109,11 @@ input, select, button {
 input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 209, 0, .2); }
 select option { background: var(--panel); color: var(--text); }
 input[type='color'] { padding: 2px; height: 36px; width: 100%; cursor: pointer; }
+input[type='range'] { width: 100%; height: 20px; padding: 0; border: 0; background: none; accent-color: var(--accent); cursor: pointer; }
+input[type='range']:focus { box-shadow: none; }
+input[type='range']:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.split { display: flex; justify-content: space-between; gap: 8px; }
+.split output { color: var(--text); font-variant-numeric: tabular-nums; }
 input[type='checkbox'] { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
 
 /* Buttons wie bei FaceitWatchr: Chakra Petch, Versalien */
