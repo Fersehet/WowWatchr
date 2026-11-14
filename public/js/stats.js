@@ -297,7 +297,7 @@ function row(id, badge, title, sub, result, at, detail) {
 }
 
 function renderList(t) {
-  $('listHead').textContent = t.stListHead;
+  $('listHead').textContent = forever() ? t.stListHeadRaids : t.stListHead;
   $('listHint').textContent = t.stListHint;
   // Warcraft Logs gibt es nur für Retail
   const reports = forever() ? [] : data?.logs?.reports ?? [];
