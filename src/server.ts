@@ -214,7 +214,12 @@ app.get('/api/events', (req, res) => {
   res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
   res.flushHeaders();
   listeners.add(res);
-  req.on('close', () => listeners.delete(res));
+  // Ein Kommentar alle 30 s hält die Verbindung hinter einem Reverse Proxy offen, sonst lädt das Overlay ständig neu
+  const ping = setInterval(() => res.write(':\n\n'), 30_000);
+  req.on('close', () => {
+    clearInterval(ping);
+    listeners.delete(res);
+  });
 });
 
 app.listen(PORT, HOST, () => {
