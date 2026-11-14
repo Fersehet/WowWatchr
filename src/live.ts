@@ -186,6 +186,7 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
       guild: profile.guild?.name ?? '',
       // Forever liefert keine Spezialisierung, dann nur die Klasse
       spec: profile.active_spec ? spec(tr(profile.active_spec.name), tr(profile.character_class?.name)) : tr(profile.character_class?.name),
+      level: profile.level ?? 0,
       ilvl: profile.equipped_item_level ?? 0,
       avatar: media?.assets?.find((a: Json) => a.key === 'avatar')?.value ?? null,
     },
@@ -211,9 +212,10 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
     raid: {
       name: instance ? tr(instance.instance?.name) : '',
       season: null,
-      bosses: mode('NORMAL')?.total_count ?? mode('HEROIC')?.total_count ?? mode('MYTHIC')?.total_count ?? 0,
+      bosses: (forever ? instance?.modes?.[0]?.progress?.total_count : null) ?? mode('NORMAL')?.total_count ?? mode('HEROIC')?.total_count ?? mode('MYTHIC')?.total_count ?? 0,
       difficulties: (['normal', 'heroic', 'mythic'] as const).map((id) => {
-        const progress = mode(id.toUpperCase());
+        // Forever kennt nur eine Schwierigkeit: die erste, die Blizzard liefert
+        const progress = forever && id === 'normal' ? instance?.modes?.[0]?.progress : mode(id.toUpperCase());
         return {
           id,
           killed: progress?.completed_count ?? 0,

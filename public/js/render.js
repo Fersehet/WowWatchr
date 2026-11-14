@@ -11,14 +11,21 @@ const AVATAR = (size, label, url) => url
   : `<svg class="avatar" width="${size}" height="${size}" viewBox="0 0 72 72" role="img" aria-label="${esc(label)}"><circle cx="36" cy="28" r="12" fill="#8b909c"/><path d="M12 66c2-16 12-23 24-23s22 7 24 23z" fill="#8b909c"/></svg>`;
 
 /** Bereitet die Werte einmal auf, damit jedes Layout nur noch Markup enthält. */
-function view(state, lang) {
+function view(state, lang, game) {
   const t = TEXTS[lang];
   const pct = (n) => (lang === 'en' ? `${n}%` : `${n} %`);
   const { character: c, mplus: m, raid: r } = state;
-  const top = [...r.difficulties].reverse().find((d) => d.killed > 0);
+  // WoW Forever: nur eine Schwierigkeit, ohne Namen
+  const forever = game === 'forever';
+  const diffs = forever ? r.difficulties.slice(0, 1) : r.difficulties;
+  const top = [...diffs].reverse().find((d) => d.killed > 0);
+  // WoW Forever hat kein Mythisch+: Seite heißt Dungeon, Wertung, Key und Zeitstufen fallen weg
+  const mp = !forever;
   return {
     t,
-    c: { name: esc(c.name), realm: esc(c.realm), guild: esc(c.guild), spec: esc(c.spec), ilvl: c.ilvl, avatar: c.avatar },
+    mp,
+    title: mp ? t.mplus : t.dungeon,
+    c: { name: esc(c.name), realm: esc(c.realm), guild: esc(c.guild), spec: esc(c.spec), level: c.level ?? 0, ilvl: c.ilvl, avatar: c.avatar },
     score: m.score.toLocaleString(lang).replace(/\s/g, ' '),
     scorePct: m.scorePct,
     best: `+${m.bestKey}`,
@@ -33,10 +40,10 @@ function view(state, lang) {
       cls: run.result > 0 ? 'up' : 'down',
     })),
     season: r.name ? esc(r.name) : r.season ? `${t.season} ${r.season}` : '',
-    top: top ? `${top.killed}/${r.bosses} ${t.diffShort[top.id]}` : `0/${r.bosses}`,
-    raids: r.difficulties.map((d) => ({
+    top: top ? `${top.killed}/${r.bosses}${forever ? '' : ` ${t.diffShort[top.id]}`}` : `0/${r.bosses}`,
+    raids: diffs.map((d) => ({
       id: d.id,
-      name: t.diff[d.id],
+      name: forever ? '' : t.diff[d.id],
       prog: `${d.killed}/${r.bosses}`,
       pct: r.bosses ? Math.round((d.killed / r.bosses) * 100) : 0,
       kills: d.kills,
@@ -58,24 +65,25 @@ const LAYOUTS = {
           <div style="font-size:14px;color:#d3d7df;margin-top:4px">${v.c.spec} · ${v.c.realm}</div>
           <div style="font-size:13px;color:#b1b7c3;margin-top:2px">${v.c.guild}</div>
         </div>
+        <div class="stack end" style="gap:4px"><div class="lbl">${v.t.level}</div><div style="font-size:38px;font-weight:700;line-height:1">${v.c.level}</div></div>
         <div class="stack end" style="gap:4px"><div class="lbl">${v.t.ilvl}</div><div class="accent" style="font-size:38px;font-weight:700;line-height:1">${v.c.ilvl}</div></div>
       </div>
-      <div style="margin-top:16px">
+      ${v.mp ? `<div style="margin-top:16px">
         <div class="row between" style="margin-bottom:6px"><span class="lbl">${v.t.score}</span><span style="font-size:15px;font-weight:700">${v.score}</span></div>
         <div class="track" style="height:10px"><div class="fill" style="width:${v.scorePct}%"></div></div>
-      </div>
+      </div>` : ''}
       <div class="stats">${each(v.stats, (s) => `<div><div class="lbl">${s.label}</div><div class="big">${s.value}</div></div>`)}</div>`,
     mplus: (v) => `
       <div class="row between" style="margin-bottom:10px">
-        <div class="stack" style="gap:2px"><div class="lbl">${v.t.recent}</div><div class="title">${v.t.mplus}</div></div>
-        <div class="row" style="gap:24px">
+        <div class="stack" style="gap:2px">${v.mp ? `<div class="lbl">${v.t.recent}</div>` : ''}<div class="title">${v.title}</div></div>
+        ${v.mp ? `<div class="row" style="gap:24px">
           <div class="stack end"><div class="lbl">${v.t.timed}</div><div class="num">${v.timed}</div></div>
           <div class="stack end"><div class="lbl">${v.t.best}</div><div class="num">${v.best}</div></div>
           <div class="stack end"><div class="lbl">${v.t.score}</div><div class="num accent">${v.score}</div></div>
-        </div>
+        </div>` : ''}
       </div>
-      <div class="stack bottom" style="gap:6px">${each(v.runs, (r) => `
-        <div class="row"><span class="chip">${r.key}</span><span class="grow name">${r.name}</span><span class="time">${r.time}</span><span class="chip ${r.cls}">${r.result}</span></div>`)}
+      <div class="stack bottom" style="gap:6px">${v.runs.length ? each(v.runs, (r) => `
+        <div class="row">${v.mp ? `<span class="chip">${r.key}</span>` : ''}<span class="grow name">${r.name}</span><span class="time">${r.time}</span>${v.mp ? `<span class="chip ${r.cls}">${r.result}</span>` : ''}</div>`) : `<div class="lbl">${v.t.noDungeons}</div>`}
       </div>`,
     raid: (v) => `
       <div class="row between">
@@ -99,19 +107,20 @@ const LAYOUTS = {
       ${MARK(48)}
       <div class="stack" style="min-width:150px"><div style="font-size:20px;font-weight:700;line-height:1.15">${v.c.name}</div><div style="font-size:12px;color:#d3d7df;white-space:nowrap">${v.c.spec}</div></div>
       <div class="div"></div>
+      <div class="stack"><div class="lbl">${v.t.level}</div><div class="big">${v.c.level}</div></div>
       <div class="stack"><div class="lbl">${v.t.ilvl}</div><div class="big accent">${v.c.ilvl}</div></div>
-      <div class="stack"><div class="lbl">${v.t.score}</div><div class="big accent">${v.score}</div></div>
+      ${v.mp ? `<div class="stack"><div class="lbl">${v.t.score}</div><div class="big accent">${v.score}</div></div>` : ''}
       <div class="div"></div>
       ${each(v.stats, (s) => `<div class="stack grow"><div class="lbl">${s.label}</div><div style="font-size:20px;font-weight:700;line-height:1.2">${s.value}</div></div>`)}`,
     mplus: (v) => `
       ${MARK(48)}
-      <div class="stack" style="width:92px;flex:none"><div class="lbl">${v.t.score}</div><div class="big accent">${v.score}</div></div>
+      ${v.mp ? `<div class="stack" style="width:92px;flex:none"><div class="lbl">${v.t.score}</div><div class="big accent">${v.score}</div></div>` : `<div class="big" style="flex:none">${v.title}</div>`}
       <div class="div"></div>
-      <div class="row" style="gap:10px">${each(v.runs, (r) => `
+      <div class="row" style="gap:10px">${v.runs.length ? each(v.runs, (r) => `
         <div class="tile stack" style="gap:3px">
-          <div class="row" style="gap:6px"><span style="font-size:17px;font-weight:700">${r.key}</span><span class="result ${r.cls}">${r.result}</span><span class="rtime ${r.cls}">${r.time}</span></div>
+          <div class="row" style="gap:6px">${v.mp ? `<span style="font-size:17px;font-weight:700">${r.key}</span><span class="result ${r.cls}">${r.result}</span><span class="rtime ${r.cls}">${r.time}</span>` : `<span class="rtime">${r.time}</span>`}</div>
           <div class="name">${r.name}</div>
-        </div>`)}
+        </div>`) : `<div class="lbl">${v.t.noDungeons}</div>`}
       </div>`,
     raid: (v) => `
       ${MARK(48)}
@@ -129,23 +138,23 @@ const LAYOUTS = {
       <div class="stack hero">
         ${AVATAR(96, v.t.portrait, v.c.avatar)}
         <div style="font-size:26px;font-weight:700;margin-top:12px;line-height:1.1">${v.c.name}</div>
-        <div style="font-size:14px;color:#d3d7df;margin-top:4px">${v.c.spec}</div>
+        <div style="font-size:14px;color:#d3d7df;margin-top:4px">${v.t.level} ${v.c.level} · ${v.c.spec}</div>
         <div style="font-size:13px;color:#b1b7c3;margin-top:2px">${[v.c.guild, v.c.realm].filter(Boolean).join(' · ')}</div>
       </div>
       <div class="line"><span class="lbl">${v.t.ilvl}</span><span class="big accent">${v.c.ilvl}</span></div>
-      <div class="line"><span class="lbl">${v.t.score}</span><span class="big accent">${v.score}</span></div>
+      ${v.mp ? `<div class="line"><span class="lbl">${v.t.score}</span><span class="big accent">${v.score}</span></div>` : ''}
       ${each(v.stats, (s) => `<div class="line"><span class="lbl">${s.label}</span><span class="num">${s.value}</span></div>`)}`,
     mplus: (v) => `
-      <div class="head">${MARK(28)}<span class="grow">${v.t.mplus}</span></div>
-      <div class="line"><span class="lbl">${v.t.score}</span><span class="accent" style="font-size:34px;font-weight:700;line-height:1">${v.score}</span></div>
+      <div class="head">${MARK(28)}<span class="grow">${v.title}</span></div>
+      ${v.mp ? `<div class="line"><span class="lbl">${v.t.score}</span><span class="accent" style="font-size:34px;font-weight:700;line-height:1">${v.score}</span></div>
       <div class="line"><span class="lbl">${v.t.best}</span><span class="num">${v.best}</span></div>
-      <div class="line"><span class="lbl">${v.t.timed}</span><span class="num">${v.timed}</span></div>
-      ${each(v.runs, (r) => `
+      <div class="line"><span class="lbl">${v.t.timed}</span><span class="num">${v.timed}</span></div>` : ''}
+      ${v.runs.length ? each(v.runs, (r) => `
         <div class="line">
           <div class="stack grow" style="gap:2px"><span style="font-size:14px;font-weight:400">${r.name}</span><span class="lbl">${r.time}</span></div>
-          <span class="num">${r.key}</span>
-          <span class="chip ${r.cls}">${r.result}</span>
-        </div>`)}`,
+          ${v.mp ? `<span class="num">${r.key}</span>
+          <span class="chip ${r.cls}">${r.result}</span>` : ''}
+        </div>`) : `<div class="line"><span class="lbl">${v.t.noDungeons}</span></div>`}`,
     raid: (v) => `
       <div class="head">${MARK(28)}<span class="grow">${v.t.raid}</span></div>
       ${each(v.raids, (r) => `
@@ -158,6 +167,6 @@ const LAYOUTS = {
 };
 
 export function renderPage(container, settings, state, page) {
-  const inner = LAYOUTS[settings.layout][page](view(state, settings.lang));
-  container.innerHTML = `<div class="ov ${settings.layout}${settings.diffColors ? ' qc' : ''}" lang="${settings.lang}" style="--accent:${settings.accent}">${inner}</div>`;
+  const inner = LAYOUTS[settings.layout][page](view(state, settings.lang, settings.game));
+  container.innerHTML = `<div class="ov ${settings.layout}${settings.diffColors && settings.game !== 'forever' ? ' qc' : ''}" lang="${settings.lang}" style="--accent:${settings.accent}">${inner}</div>`;
 }

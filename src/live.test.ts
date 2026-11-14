@@ -15,7 +15,7 @@ const API: Record<string, unknown> = {
   '/data/wow/playable-specialization/64': { playable_class: { name: names('Mage', 'Magier') } },
   [CHAR]: {
     name: 'Vaelric', realm: { name: names('Der Rat von Dalaran', 'Der Rat von Dalaran') }, guild: { name: 'Silent Vigil' },
-    equipped_item_level: 284, active_spec: { name: names('Frost', 'Frost') }, character_class: { name: names('Mage', 'Magier') },
+    level: 90, equipped_item_level: 284, active_spec: { name: names('Frost', 'Frost') }, character_class: { name: names('Mage', 'Magier') },
   },
   [`${CHAR}/statistics`]: { melee_crit: { value: 12.1 }, spell_crit: { value: 24.4 }, spell_haste: { value: 30.6 }, mastery: { value: 46.2 }, versatility_damage_done_bonus: 8.1 },
   [`${CHAR}/character-media`]: { assets: [{ key: 'avatar', value: 'https://render.worldofwarcraft.com/eu/x-avatar.jpg' }] },
@@ -45,7 +45,11 @@ const API: Record<string, unknown> = {
 // WoW Forever: keine Realms, Name-Nachname, eigener Namespace, keine Spezialisierung
 const FOREVER: Record<string, unknown> = {
   '/profile/wow/character/vaelric-sturmbraue': {
-    name: 'Vaelric', surname: 'Sturmbraue', ruleset: { name: names('PvP', 'PvP') }, equipped_item_level: 62, character_class: { name: names('Mage', 'Magier') },
+    name: 'Vaelric', surname: 'Sturmbraue', ruleset: { name: names('PvP', 'PvP') }, level: 34, equipped_item_level: 62, character_class: { name: names('Mage', 'Magier') },
+  },
+  // Forever: eine einzige Schwierigkeit mit eigenem Typ
+  '/profile/wow/character/vaelric-sturmbraue/encounters/raids': {
+    expansions: [{ instances: [{ instance: { name: names('Molten Core', 'Geschmolzener Kern') }, modes: [{ difficulty: { type: 'LEGACY_40_MAN' }, progress: { completed_count: 7, total_count: 10, encounters: [{ completed_count: 3, last_kill_timestamp: 5 }, { completed_count: 2 }] } }] }] }],
   },
 };
 
@@ -75,7 +79,7 @@ test('baut den Overlay-Zustand aus den Blizzard-Daten, auf Deutsch', async () =>
   const state = await fetchLive(settings, new Blizzard('id', 'secret', fn));
   assert.ok(state);
   assert.deepEqual(state.character, {
-    name: 'Vaelric', realm: 'Der Rat von Dalaran', guild: 'Silent Vigil', spec: 'Frost-Magier', ilvl: 284,
+    name: 'Vaelric', realm: 'Der Rat von Dalaran', guild: 'Silent Vigil', spec: 'Frost-Magier', level: 90, ilvl: 284,
     avatar: 'https://render.worldofwarcraft.com/eu/x-avatar.jpg',
   });
   assert.deepEqual(state.stats, { crit: 24, haste: 31, mastery: 46, versatility: 8 });
@@ -148,8 +152,10 @@ test('WoW Forever: Name-Nachname im Forever-Namespace', async () => {
   const { fn, calls } = fakeFetch();
   const state = await fetchLive({ ...settings, game: 'forever', realm: 'Sturmbraue' }, new Blizzard('id', 'secret', fn));
   assert.ok(state);
-  assert.deepEqual([state.character.name, state.character.realm, state.character.spec, state.character.ilvl], ['Vaelric Sturmbraue', 'PvP', 'Magier', 62]);
+  assert.deepEqual([state.character.name, state.character.realm, state.character.spec, state.character.level, state.character.ilvl], ['Vaelric Sturmbraue', 'PvP', 'Magier', 34, 62]);
   assert.equal(state.stats, null);
+  assert.equal(state.raid.bosses, 10);
+  assert.deepEqual(state.raid.difficulties[0], { id: 'normal', killed: 7, kills: 5, parse: null });
   assert.ok(!calls.some((c) => c.startsWith('/data/wow/realm/index')), 'Forever hat keinen Realm-Index');
   assert.ok(calls.filter((c) => c.includes('namespace=')).every((c) => c.includes('-forever-eu')), 'alle Abfragen im Forever-Namespace');
 });
