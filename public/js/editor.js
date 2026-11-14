@@ -274,7 +274,11 @@ $('realm').addEventListener('input', (e) => save({ realm: e.target.value }));
 $('region').addEventListener('change', (e) => save({ region: e.target.value }));
 $('game').addEventListener('change', (e) => save({ game: e.target.value }));
 $('interval').addEventListener('change', (e) => save({ interval: Number(e.target.value) }));
-$('scale').addEventListener('change', (e) => save({ scale: Number(e.target.value) }));
+$('scale').addEventListener('change', (e) => {
+  // Gleich hier begrenzen, damit das Feld nach Enter den echten Wert zeigt; leer = 100 %
+  e.target.value = Math.min(300, Math.max(50, Math.round(Number(e.target.value) || 100)));
+  save({ scale: Number(e.target.value) });
+});
 $('accent').addEventListener('input', (e) => save({ accent: e.target.value }));
 $('diffColors').addEventListener('change', (e) => save({ diffColors: e.target.value === 'on' }));
 $('accentReset').addEventListener('click', () => save({ accent: DEFAULT_ACCENT }));
