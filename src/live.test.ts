@@ -49,7 +49,7 @@ const FOREVER: Record<string, unknown> = {
   },
   // Forever: eine einzige Schwierigkeit mit eigenem Typ
   '/profile/wow/character/vaelric-sturmbraue/encounters/raids': {
-    expansions: [{ instances: [{ instance: { name: names('Molten Core', 'Geschmolzener Kern') }, modes: [{ difficulty: { type: 'LEGACY_40_MAN' }, progress: { completed_count: 7, total_count: 10, encounters: [{ completed_count: 3, last_kill_timestamp: 5 }, { completed_count: 2 }] } }] }] }],
+    expansions: [{ instances: [{ instance: { name: names('Molten Core', 'Geschmolzener Kern') }, modes: [{ difficulty: { type: 'LEGACY_40_MAN' }, progress: { completed_count: 7, total_count: 10, encounters: [{ encounter: { id: 1 }, completed_count: 3, last_kill_timestamp: 5 }, { encounter: { id: 2 }, completed_count: 2 }] } }] }] }],
   },
 };
 
@@ -156,6 +156,8 @@ test('WoW Forever: Name-Nachname im Forever-Namespace', async () => {
   assert.equal(state.stats, null);
   assert.equal(state.raid.bosses, 10);
   assert.deepEqual(state.raid.difficulties[0], { id: 'normal', killed: 7, kills: 5, parse: null });
+  // Verlauf für die Statistik: die eine Forever-Schwierigkeit zählt als Normal
+  assert.deepEqual(state.snapshot.raids[0].bosses.map((b) => b.kills), [{ normal: 3, heroic: 0, mythic: 0 }, { normal: 2, heroic: 0, mythic: 0 }]);
   assert.ok(!calls.some((c) => c.startsWith('/data/wow/realm/index')), 'Forever hat keinen Realm-Index');
   assert.ok(calls.filter((c) => c.includes('namespace=')).every((c) => c.includes('-forever-eu')), 'alle Abfragen im Forever-Namespace');
 });

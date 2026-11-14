@@ -228,6 +228,7 @@ button[type='submit']:hover { filter: brightness(1.06); }
 .stats-view { flex: 1; min-height: 0; overflow-y: auto; width: 100%; padding: 32px 16px 48px; --down: var(--danger); }
 .stats-view > * { max-width: 1128px; margin-left: auto; margin-right: auto; }
 .stats-view .stats-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; }
+.stats-view .stats-grid.single { grid-template-columns: 1fr; }
 .stats-view .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 22px; min-width: 0; display: flex; flex-direction: column; }
 .stats-view .list-panel { margin-top: 24px; }
 .stats-view .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
