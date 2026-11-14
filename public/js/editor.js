@@ -5,6 +5,8 @@ import { loadStats, renderStats } from './stats.js';
 const $ = (id) => document.getElementById(id);
 const DEFAULT_ACCENT = '#ffd100';
 const LAYOUT_NAMES = { a: 'layoutA', c: 'layoutC', d: 'layoutD' };
+// Größe eines Layouts mit der eingestellten Skalierung, so wie OBS sie braucht
+const sizeOf = (id) => SIZES[id].map((n) => Math.ceil((n * settings.scale) / 100));
 
 // Sitzung abgelaufen: zurück zum Login
 const toLogin = () => (location.href = `/login.html?next=${encodeURIComponent(location.pathname + location.search)}`);
@@ -73,7 +75,7 @@ function linkRow(label, path) {
 
 function drawControls() {
   const t = TEXTS[uiLang];
-  const [w, h] = SIZES[settings.layout];
+  const [w, h] = sizeOf(settings.layout);
   document.documentElement.lang = uiLang;
   document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t[el.dataset.i18n]));
   const status = saveFailed ? 'saveError' : { loading: 'dataLoading' }[dataStatus] ?? dataStatus;
@@ -97,14 +99,14 @@ function drawControls() {
   $('discordTest').disabled = !discord.connected;
   $('discordState').textContent = discord.note ? t[discord.note] : t[discord.connected ? 'discordOn' : 'discordOff'];
   // Beim Tippen den Cursor nicht verlieren
-  for (const id of ['name', 'realm', 'interval']) if (document.activeElement !== $(id)) $(id).value = settings[id];
+  for (const id of ['name', 'realm', 'interval', 'scale']) if (document.activeElement !== $(id)) $(id).value = settings[id];
 
   $('layouts').replaceChildren(...Object.keys(SIZES).map((id) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'choice';
     button.setAttribute('aria-pressed', id === settings.layout);
-    button.innerHTML = `<span></span><small>${SIZES[id][0]} × ${SIZES[id][1]}</small>`;
+    button.innerHTML = `<span></span><small>${sizeOf(id)[0]} × ${sizeOf(id)[1]}</small>`;
     button.querySelector('span').textContent = t[LAYOUT_NAMES[id]];
     button.addEventListener('click', () => save({ layout: id }));
     return button;
@@ -143,7 +145,7 @@ function drawControls() {
 }
 
 function drawPreview() {
-  const [w, h] = SIZES[settings.layout];
+  const [w, h] = sizeOf(settings.layout);
   const frame = $('frame');
   const src = previewPage ? `/overlay/${previewPage}` : '/overlay';
   if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
@@ -272,6 +274,7 @@ $('realm').addEventListener('input', (e) => save({ realm: e.target.value }));
 $('region').addEventListener('change', (e) => save({ region: e.target.value }));
 $('game').addEventListener('change', (e) => save({ game: e.target.value }));
 $('interval').addEventListener('change', (e) => save({ interval: Number(e.target.value) }));
+$('scale').addEventListener('change', (e) => save({ scale: Number(e.target.value) }));
 $('accent').addEventListener('input', (e) => save({ accent: e.target.value }));
 $('diffColors').addEventListener('change', (e) => save({ diffColors: e.target.value === 'on' }));
 $('accentReset').addEventListener('click', () => save({ accent: DEFAULT_ACCENT }));

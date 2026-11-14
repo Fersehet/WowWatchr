@@ -23,6 +23,8 @@
 
       function draw() {
         shown = currentPage();
+        // zoom statt transform: der Browser zeichnet Schrift und Formen in der neuen Größe neu, also scharf statt hochgezogen
+        container.style.zoom = settings.scale / 100;
         renderPage(container, settings, state, shown);
       }
 
