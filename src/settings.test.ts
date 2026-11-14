@@ -52,3 +52,9 @@ test('Deckkraft folgt dem Layout, bis man sie setzt, begrenzt auf 0 bis 100 %', 
   assert.equal(sanitize({ opacity: -5 }).opacity, 0);
   assert.equal(sanitize({ opacity: 'abc' }).opacity, null);
 });
+
+test('Hintergrundfarbe folgt dem Layout, bis man sie setzt', () => {
+  assert.equal(sanitize({}).bgColor, null);
+  assert.equal(sanitize({ bgColor: '#336699' }).bgColor, '#336699');
+  assert.equal(sanitize({ bgColor: 'red' }).bgColor, null);
+});
