@@ -80,7 +80,9 @@ function renderChart(t, runs) {
   sorted.forEach((run, i) => {
     const x = left + i * slot + (slot - bar) / 2;
     const label = name(run.dungeon);
-    svg += `<rect class="bar${run.result < 0 ? ' over' : ''}" x="${x}" y="${y(run.rating)}" width="${bar}" height="${y(0) - y(run.rating)}" rx="3"><title>${esc(label)} +${run.key} · ${num(run.rating, 1)}</title></rect>`;
+    // Beim Hovern steht die Wertung des Runs als Zahl im Balken
+    svg += `<g class="col"><rect class="bar${run.result < 0 ? ' over' : ''}" x="${x}" y="${y(run.rating)}" width="${bar}" height="${y(0) - y(run.rating)}" rx="3"><title>${esc(label)} +${run.key} · ${num(run.rating, 1)}</title></rect>`;
+    svg += `<text class="val" x="${x + bar / 2}" y="${y(run.rating) + 16}" text-anchor="middle">${num(run.rating, 1)}</text></g>`;
     svg += `<text class="key" x="${x + bar / 2}" y="${y(run.rating) - 6}" text-anchor="middle">+${run.key}</text>`;
     const [one, two] = twoLines(label, Math.max(6, Math.floor(slot / 7)));
     svg += `<text x="${x + bar / 2}" y="${H - 24}" text-anchor="middle">${esc(one)}${two ? `<tspan x="${x + bar / 2}" dy="14">${esc(two)}</tspan>` : ''}<title>${esc(label)}</title></text>`;

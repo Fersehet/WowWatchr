@@ -71,6 +71,9 @@ function linkRow(label, path) {
   return row;
 }
 
+// WoW Forever hat kein Mythisch+, dort heißt die Seite Dungeon
+const pageName = (t, page) => (page === 'mplus' && settings.game === 'forever' ? t.dungeon : t[page]);
+
 function drawControls() {
   const t = TEXTS[uiLang];
   const [w, h] = SIZES[settings.layout];
@@ -88,6 +91,8 @@ function drawControls() {
   $('game').value = settings.game;
   // Forever hat keine Realms, dort heißt das Feld Nachname
   $('realmLabel').textContent = settings.game === 'forever' ? t.surname : t.realm;
+  // Forever hat nur eine Schwierigkeit, Farben pro Schwierigkeit ergeben dort keinen Sinn
+  $('diffColors').closest('label').hidden = settings.game === 'forever';
   $('accent').value = settings.accent;
   $('diffColors').value = settings.diffColors ? 'on' : 'off';
   $('discordStyle').value = settings.discordStyle;
@@ -118,11 +123,11 @@ function drawControls() {
     box.checked = settings.pages[page];
     box.disabled = enabled.length === 1 && settings.pages[page]; // mindestens eine Seite bleibt an
     box.addEventListener('change', () => save({ pages: { ...settings.pages, [page]: box.checked } }));
-    item.querySelector('span').textContent = t[page];
+    item.querySelector('span').textContent = pageName(t, page);
     return item;
   }));
 
-  $('links').replaceChildren(linkRow(t.linkRotate, '/overlay'), ...PAGES.map((page) => linkRow(t[page], `/overlay/${page}`)));
+  $('links').replaceChildren(linkRow(t.linkRotate, '/overlay'), ...PAGES.map((page) => linkRow(pageName(t, page), `/overlay/${page}`)));
   $('obsHint').textContent = t.obsHint.replace('{w}', w).replace('{h}', h);
 
   $('rail').setAttribute('aria-label', t.aViews);
@@ -131,7 +136,7 @@ function drawControls() {
     const button = document.createElement('button');
     button.type = 'button';
     button.setAttribute('aria-pressed', page === previewPage);
-    button.append(Object.assign(document.createElement('span'), { textContent: page ? t[page] : t.auto }));
+    button.append(Object.assign(document.createElement('span'), { textContent: page ? pageName(t, page) : t.auto }));
     button.addEventListener('click', () => {
       previewPage = page;
       drawControls();

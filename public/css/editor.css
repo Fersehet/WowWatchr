@@ -243,6 +243,8 @@ button[type='submit']:hover { filter: brightness(1.06); }
 .stats-view .chart .grid-line { stroke: var(--border); }
 .stats-view .chart .bar { fill: var(--accent); }
 .stats-view .chart .bar.over { fill: var(--down); }
+.stats-view .chart text.val { fill: #0d1017; font-weight: 700; pointer-events: none; opacity: 0; transition: opacity .15s; }
+.stats-view .chart .col:hover text.val { opacity: 1; }
 .stats-view .chart .empty { font-size: 13px; }
 .stats-view .trend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: auto 0 0; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .stats-view .trend div { background: var(--panel); padding: 12px 14px; display: grid; gap: 6px; }
