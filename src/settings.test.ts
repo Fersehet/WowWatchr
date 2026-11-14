@@ -35,3 +35,11 @@ test('Schwierigkeiten sind farbig, außer man schaltet es aus', () => {
   assert.equal(sanitize({}).diffColors, true);
   assert.equal(sanitize({ diffColors: false }).diffColors, false);
 });
+
+test('Größe ist 100 %, begrenzt auf 50 bis 300 %', () => {
+  assert.equal(sanitize({}).scale, 100);
+  assert.equal(sanitize({ scale: 133 }).scale, 133);
+  assert.equal(sanitize({ scale: 10 }).scale, 50);
+  assert.equal(sanitize({ scale: 999 }).scale, 300);
+  assert.equal(sanitize({ scale: 'abc' }).scale, 100);
+});
