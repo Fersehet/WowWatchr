@@ -6,8 +6,12 @@ const $ = (id) => document.getElementById(id);
 const LOCALES = { de: 'de-DE', en: 'en-GB', ru: 'ru-RU', fr: 'fr-FR' };
 const API_LOCALES = { de: 'de_DE', en: 'en_US', ru: 'ru_RU', fr: 'fr_FR' };
 const DIFFS = ['normal', 'heroic', 'mythic'];
+// WoW Forever: kein Mythisch+ und nur eine Schwierigkeit
+let game = 'retail';
+const forever = () => game === 'forever';
+const diffs = () => (forever() ? ['normal'] : DIFFS);
 /** Letzter Kill eines Bosses über alle Schwierigkeiten */
-const lastKill = (boss) => Math.max(0, ...DIFFS.map((d) => boss.last?.[d] ?? 0));
+const lastKill = (boss) => Math.max(0, ...diffs().map((d) => boss.last?.[d] ?? 0));
 
 let data = null;
 let state = null;
@@ -27,25 +31,30 @@ const day = (ts) => new Date(ts).toLocaleDateString(LOCALES[lang], { day: '2-dig
 const dayTime = (ts) => new Date(ts).toLocaleString(LOCALES[lang], { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (_, k) => vars[k]);
 
-export async function loadStats(uiLang) {
+export async function loadStats(uiLang, uiGame) {
   lang = uiLang;
+  game = uiGame;
   const [stats, overlay] = await Promise.all([
     fetch('/api/stats', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     fetch('/api/state', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
   ]);
   if (stats) data = stats;
   if (overlay) state = overlay;
-  renderStats(uiLang);
+  renderStats(uiLang, game);
 }
 
-export function renderStats(uiLang) {
+export function renderStats(uiLang, uiGame) {
   lang = uiLang;
+  game = uiGame;
   const t = TEXTS[lang];
   // Pro Dungeon zählt der neueste gespeicherte Run, das ist der aktuelle Bestwert bei Blizzard
   const best = new Map();
   // Nur die neueste Saison, ältere Bestwerte bleiben in der Liste
   const season = Math.max(0, ...(data?.runs ?? []).map((r) => r.season ?? 0));
   for (const run of data?.runs ?? []) if ((run.season ?? 0) === season && !best.has(run.dungeonId)) best.set(run.dungeonId, run);
+  // Forever: keine M+-Wertung, also kein Diagramm; die Saison-Werte nehmen die ganze Breite
+  $('chartHead').closest('.panel').hidden = forever();
+  $('chartHead').closest('.stats-grid').classList.toggle('single', forever());
   renderChart(t, [...best.values()]);
   renderSeason(t);
   renderList(t);
@@ -112,13 +121,14 @@ function renderSeason(t) {
   const r = state?.raid;
   $('seasonHead').textContent = t.stSeason;
   $('seasonName').textContent = r?.name ?? '';
+  for (const id of ['ssScore', 'ssBest', 'ssTimed']) $(id).parentElement.hidden = forever();
   $('ssScore').textContent = m ? num(m.score) : '–';
   $('ssBest').textContent = m?.bestKey ? `+${m.bestKey}` : '–';
   $('ssTimed').textContent = m ? `${m.timed} / ${m.total}` : '–';
-  const done = r?.difficulties.filter((d) => d.killed > 0).map((d) => `${d.killed}/${r.bosses} ${t.diffShort[d.id]}`) ?? [];
+  const done = (forever() ? r?.difficulties.slice(0, 1) : r?.difficulties)?.filter((d) => d.killed > 0).map((d) => `${d.killed}/${r.bosses}${forever() ? '' : ` ${t.diffShort[d.id]}`}`) ?? [];
   $('ssRaid').textContent = done.slice(-2).join(' · ') || '–';
-  $('ssKills').textContent = r ? num(r.difficulties.reduce((s, d) => s + d.kills, 0)) : '–';
-  $('seasonNote').textContent = data?.demo ? t.stDemoNote : t.stSeasonNote;
+  $('ssKills').textContent = r ? num((forever() ? r.difficulties.slice(0, 1) : r.difficulties).reduce((s, d) => s + d.kills, 0)) : '–';
+  $('seasonNote').textContent = data?.demo ? t.stDemoNote : forever() ? t.stForeverNote : t.stSeasonNote;
 }
 
 function runRow(t, run) {
@@ -239,8 +249,8 @@ function withLogs(runs, reports) {
 
 /** Boss-Tabelle mit allen Kills pro Schwierigkeit, wie Blizzard sie führt */
 function bossTable(t, raid) {
-  return `<div class="tablewrap"><table class="bosses"><thead><tr><th>${esc(t.stBoss)}</th>${DIFFS.map((d) => `<th>${esc(t.diff[d])}</th>`).join('')}<th>${esc(t.stLastKill)}</th></tr></thead><tbody>
-    ${raid.bosses.map((b) => `<tr><td>${esc(name(b.name))}</td>${DIFFS.map((d) => `<td class="${b.kills[d] ? '' : 'zero'}">${b.kills[d]}×</td>`).join('')}<td>${lastKill(b) ? day(lastKill(b)) : '–'}</td></tr>`).join('')}
+  return `<div class="tablewrap"><table class="bosses"><thead><tr><th>${esc(t.stBoss)}</th>${diffs().map((d) => `<th>${esc(forever() ? t.kills : t.diff[d])}</th>`).join('')}<th>${esc(t.stLastKill)}</th></tr></thead><tbody>
+    ${raid.bosses.map((b) => `<tr><td>${esc(name(b.name))}</td>${diffs().map((d) => `<td class="${b.kills[d] ? '' : 'zero'}">${b.kills[d]}×</td>`).join('')}<td>${lastKill(b) ? day(lastKill(b)) : '–'}</td></tr>`).join('')}
   </tbody></table></div>`;
 }
 
@@ -253,7 +263,7 @@ const raidBadge = (t) => `<span class="badge raid">${esc(t.stRaidBadge)}</span>`
 function raidRows(t, raid) {
   const nights = new Map();
   for (const k of data?.kills ?? []) {
-    if (name(k.raid) !== name(raid.name)) continue;
+    if (name(k.raid) !== name(raid.name) || !diffs().includes(k.difficulty)) continue;
     const key = new Date(k.at).toDateString();
     if (!nights.has(key)) nights.set(key, { at: k.at, kills: [] });
     nights.get(key).kills.push(k);
@@ -262,19 +272,19 @@ function raidRows(t, raid) {
     return [...nights.entries()].map(([key, night]) => {
       const id = `raid-${raid.id}-${key}`;
       const bosses = new Set(night.kills.map((k) => name(k.boss))).size;
-      const diffs = DIFFS.filter((d) => night.kills.some((k) => k.difficulty === d)).map((d) => t.diff[d]).join(' · ');
+      const sub = forever() ? '' : DIFFS.filter((d) => night.kills.some((k) => k.difficulty === d)).map((d) => t.diff[d]).join(' · ');
       const detail = `
         <div class="sub">${esc(t.stFallen)}</div>
-        <ul class="fallen">${night.kills.map((k) => `<li><span>${esc(name(k.boss))}</span><b>${esc(t.diff[k.difficulty])}${k.count > 1 ? ` ×${k.count}` : ''}</b></li>`).join('')}</ul>
+        <ul class="fallen">${night.kills.map((k) => `<li><span>${esc(name(k.boss))}</span><b>${forever() ? '' : esc(t.diff[k.difficulty])}${k.count > 1 ? ` ×${k.count}` : ''}</b></li>`).join('')}</ul>
         <div class="sub">${esc(t.stProgress)}</div>${bossTable(t, raid)}`;
-      return { id, at: night.at, html: () => row(id, raidBadge(t), name(raid.name), diffs, `<span class="res gold">${esc(bosses === 1 ? t.stBossOne : fill(t.stBosses, { n: bosses }))}</span>`, night.at, detail) };
+      return { id, at: night.at, html: () => row(id, raidBadge(t), name(raid.name), sub, `<span class="res gold">${esc(bosses === 1 ? t.stBossOne : fill(t.stBosses, { n: bosses }))}</span>`, night.at, detail) };
     });
   }
   const id = `raid-${raid.id}`;
   const total = raid.bosses.length;
   const last = Math.max(0, ...raid.bosses.map(lastKill));
-  const kills = raid.bosses.reduce((s, b) => s + DIFFS.reduce((a, d) => a + b.kills[d], 0), 0);
-  const progress = DIFFS.map((d) => `${raid.bosses.filter((b) => b.kills[d] > 0).length}/${total} ${t.diffShort[d]}`).join(' · ');
+  const kills = raid.bosses.reduce((s, b) => s + diffs().reduce((a, d) => a + b.kills[d], 0), 0);
+  const progress = diffs().map((d) => `${raid.bosses.filter((b) => b.kills[d] > 0).length}/${total}${forever() ? '' : ` ${t.diffShort[d]}`}`).join(' · ');
   const detail = `${bossTable(t, raid)}<p class="example">${esc(t.stNightsSoon)}</p>`;
   return [{ id, at: last, html: () => row(id, raidBadge(t), name(raid.name), progress, `<span class="res gold">${esc(kills === 1 ? t.stKillOne : fill(t.stKills, { n: num(kills) }))}</span>`, last, detail) }];
 }
@@ -289,12 +299,14 @@ function row(id, badge, title, sub, result, at, detail) {
 function renderList(t) {
   $('listHead').textContent = t.stListHead;
   $('listHint').textContent = t.stListHint;
-  const reports = data?.logs?.reports ?? [];
+  // Warcraft Logs gibt es nur für Retail
+  const reports = forever() ? [] : data?.logs?.reports ?? [];
   const logRaids = reports.filter((r) => r.fights.some((f) => WCL_DIFF[f.difficulty] && f.keyLevel == null)).map((r) => logRaidRow(t, r));
   // Gibt es für einen Tag ein Log, ersetzt es den Raid-Abend aus den Blizzard-Kills
   const logged = new Set(logRaids.map((r) => r.day));
   const rows = [
-    ...withLogs(data?.runs ?? [], reports).map((run) => runRow(t, run)),
+    // Forever hat keine Dungeon-Runs bei Blizzard (Beispieldaten schon)
+    ...(forever() ? [] : withLogs(data?.runs ?? [], reports).map((run) => runRow(t, run))),
     ...logRaids,
     ...(data?.raids ?? []).filter((raid) => raid.bosses.some(lastKill)).flatMap((raid) => raidRows(t, raid)).filter((r) => !logged.has(new Date(r.at).toDateString())),
   ].sort((a, b) => b.at - a.at);

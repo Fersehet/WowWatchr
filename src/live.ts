@@ -160,8 +160,9 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
     }))),
     raids: newest.map((inst: Json): Raid => {
       const bosses = new Map<number, Raid['bosses'][number]>();
-      for (const m of inst.modes ?? []) {
-        const difficulty = String(m.difficulty?.type ?? '').toLowerCase();
+      // Forever kennt nur eine Schwierigkeit: die erste, die Blizzard liefert, zählt als Normal
+      for (const m of forever ? (inst.modes ?? []).slice(0, 1) : inst.modes ?? []) {
+        const difficulty = forever ? 'normal' : String(m.difficulty?.type ?? '').toLowerCase();
         if (!['normal', 'heroic', 'mythic'].includes(difficulty)) continue;
         for (const e of m.progress?.encounters ?? []) {
           const id = e.encounter?.id ?? 0;

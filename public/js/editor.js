@@ -145,7 +145,7 @@ function drawControls() {
     });
     return button;
   }));
-  if (tab === 'stats') renderStats(uiLang);
+  if (tab === 'stats') renderStats(uiLang, settings.game);
   else drawPreview();
 }
 
@@ -227,7 +227,7 @@ function setTab(next, animate = true) {
     showView(viewOf(tab));
   }
   history.replaceState(null, '', tab === 'stats' ? '#stats' : location.pathname + location.search);
-  if (tab === 'stats') loadStats(uiLang);
+  if (tab === 'stats') loadStats(uiLang, settings.game);
 }
 
 for (const button of document.querySelectorAll('.tabs [data-tab]')) button.addEventListener('click', () => setTab(button.dataset.tab));
@@ -324,7 +324,7 @@ drawControls();
 loadStatus();
 new EventSource('/api/events').addEventListener('settings', () => {
   loadStatus();
-  if (tab === 'stats') loadStats(uiLang);
+  if (tab === 'stats') loadStats(uiLang, settings.game);
 });
 fetch('/api/discord').then((r) => (r.ok ? r.json() : null)).then((d) => {
   if (d) discord = { connected: d.connected, note: '' };
