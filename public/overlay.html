@@ -45,7 +45,14 @@
         }, 350);
       }, 250);
 
-      new EventSource('/api/events').addEventListener('settings', load);
+      const events = new EventSource('/api/events');
+      events.addEventListener('settings', load);
+      // Nach einem Neustart des Servers (z. B. nach einem Update) neu laden, sonst läuft in OBS der alte Code weiter
+      let connected = false;
+      events.addEventListener('open', () => {
+        if (connected) location.reload();
+        connected = true;
+      });
     </script>
   </body>
 </html>
