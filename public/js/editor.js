@@ -1,5 +1,5 @@
 import { LANGS, TEXTS } from './i18n.js';
-import { PAGES, SIZES } from './render.js';
+import { OPACITY, PAGES, SIZES } from './render.js';
 import { loadStats, renderStats } from './stats.js';
 
 const $ = (id) => document.getElementById(id);
@@ -96,6 +96,8 @@ function drawControls() {
   // Forever hat nur eine Schwierigkeit, Farben pro Schwierigkeit ergeben dort keinen Sinn
   $('diffColors').closest('label').hidden = settings.game === 'forever';
   $('accent').value = settings.accent;
+  // Ohne eigene Einstellung zeigt der Regler den Standard des gewählten Layouts
+  $('opacity').value = $('opacityValue').value = settings.opacity ?? OPACITY[settings.layout];
   $('diffColors').value = settings.diffColors ? 'on' : 'off';
   $('discordStyle').value = settings.discordStyle;
   $('discordLang').value = settings.discordLang;
@@ -284,6 +286,7 @@ $('scale').addEventListener('change', (e) => {
   e.target.value = Math.min(300, Math.max(50, Math.round(Number(e.target.value) || 100)));
   save({ scale: Number(e.target.value) });
 });
+$('opacity').addEventListener('input', (e) => save({ opacity: Number(e.target.value) }));
 $('accent').addEventListener('input', (e) => save({ accent: e.target.value }));
 $('diffColors').addEventListener('change', (e) => save({ diffColors: e.target.value === 'on' }));
 $('accentReset').addEventListener('click', () => save({ accent: DEFAULT_ACCENT }));
