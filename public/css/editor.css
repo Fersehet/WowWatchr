@@ -190,7 +190,7 @@ button[type='submit']:hover { filter: brightness(1.06); }
 .intro-logo { overflow: visible; filter: drop-shadow(0 0 18px var(--glow)); }
 /* Wie logo-animated.svg: Ring baut sich auf, das Schwert fällt ein, dann tickt der Timer */
 .i-track { opacity: 0; animation: intro-fade .4s ease .1s forwards; }
-.i-arc { stroke-dasharray: 0 100; animation: intro-fill .8s cubic-bezier(.6, 0, .2, 1) .2s forwards, intro-tick 5s steps(1, end) 1.4s infinite; }
+.i-arc { stroke-dasharray: 0 100; animation: intro-fill .8s cubic-bezier(.6, 0, .2, 1) .2s forwards, intro-tick 8s steps(1, end) 1.4s infinite; }
 .i-sword { opacity: 0; transform: translateY(-8px); animation: intro-drop .4s cubic-bezier(.3, 1.4, .5, 1) .6s forwards; }
 .intro-word { display: block; width: 184px; height: 28px; opacity: 0; animation: intro-rise .5s ease .75s forwards; }
 .intro-bar { width: 160px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; opacity: 0; animation: intro-fade .25s ease forwards; }
@@ -202,7 +202,7 @@ button[type='submit']:hover { filter: brightness(1.06); }
 @keyframes intro-fade { to { opacity: 1; } }
 @keyframes intro-load { to { transform: scaleX(1); } }
 @keyframes intro-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes intro-tick { 0% { stroke-dasharray: 70 100; } 20% { stroke-dasharray: 65 100; } 40% { stroke-dasharray: 60 100; } 60% { stroke-dasharray: 55 100; } 80% { stroke-dasharray: 50 100; } 100% { stroke-dasharray: 70 100; } }
+@keyframes intro-tick { 0% { stroke-dasharray: 70 100; } 12.5% { stroke-dasharray: 65 100; } 25% { stroke-dasharray: 60 100; } 37.5% { stroke-dasharray: 55 100; } 50% { stroke-dasharray: 50 100; } 62.5% { stroke-dasharray: 55 100; } 75% { stroke-dasharray: 60 100; } 87.5% { stroke-dasharray: 65 100; } 100% { stroke-dasharray: 70 100; } }
 @media (prefers-reduced-motion: reduce) {
   .i-track, .i-arc, .i-sword, .intro-word, .intro-bar, .intro-bar i { animation: none; opacity: 1; transform: none; stroke-dasharray: 70 100; }
 }
