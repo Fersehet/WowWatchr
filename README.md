@@ -11,7 +11,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
   <img src="docs/screenshots/overlay.gif" alt="The Classic overlay switching through its three pages: Character, Mythic+ and Raid" width="640">
 </p>
 
-- Three pages: **Character** (item level, Mythic+ rating, secondary stats), **Mythic+** (rating, best timed key, dungeons timed this season, best runs) and **Raid** (progress and kills for Normal, Heroic and Mythic in the current raid)
+- Three pages: **Character** (item level, Mythic+ rating in Blizzard's rating colour, raid progress, best key, main stat, health, secondary and tertiary stats, hero talent; the level only while you are still levelling), **Mythic+** (rating, best timed key, dungeons timed this season, best runs) and **Raid** (progress and kills for Normal, Heroic and Mythic in the current raid)
 - Three layouts: a **Classic** card, a slim **Bar** and a tall **Sidebar**
 - One OBS URL that switches through the pages on its own, or one URL per page
 - An editor in your browser with a live preview, protected by a login if you set a password, and every change shows up in OBS right away

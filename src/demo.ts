@@ -1,10 +1,10 @@
 import type { Lang, Settings } from './settings.ts';
 
-const NAMES: Record<Lang, { spec: string; dungeons: string[] }> = {
-  de: { spec: 'Frost-Magier', dungeons: ['Terrasse der Magister', 'Himmelsnadel', "Akademie von Algeth'ar", 'Grube von Saron', 'Sitz des Triumvirats'] },
-  en: { spec: 'Frost Mage', dungeons: ["Magisters' Terrace", 'Skyreach', "Algeth'ar Academy", 'Pit of Saron', 'Seat of the Triumvirate'] },
-  ru: { spec: 'Маг «Лёд»', dungeons: ['Терраса Магистров', 'Небесный Путь', "Академия Алгет'ар", 'Яма Сарона', 'Престол Триумвирата'] },
-  fr: { spec: 'Mage Givre', dungeons: ['Terrasse des Magistères', 'Orée-du-Ciel', "Académie d'Algeth'ar", 'Fosse de Saron', 'Siège du Triumvirat'] },
+const NAMES: Record<Lang, { spec: string; hero: string; dungeons: string[] }> = {
+  de: { spec: 'Frost-Magier', hero: 'Frostfeuer', dungeons: ['Terrasse der Magister', 'Himmelsnadel', "Akademie von Algeth'ar", 'Grube von Saron', 'Sitz des Triumvirats'] },
+  en: { spec: 'Frost Mage', hero: 'Frostfire', dungeons: ["Magisters' Terrace", 'Skyreach', "Algeth'ar Academy", 'Pit of Saron', 'Seat of the Triumvirate'] },
+  ru: { spec: 'Маг «Лёд»', hero: 'Ледяной огонь', dungeons: ['Терраса Магистров', 'Небесный Путь', "Академия Алгет'ар", 'Яма Сарона', 'Престол Триумвирата'] },
+  fr: { spec: 'Mage Givre', hero: 'Feu de givre', dungeons: ['Terrasse des Magistères', 'Orée-du-Ciel', "Académie d'Algeth'ar", 'Fosse de Saron', 'Siège du Triumvirat'] },
 };
 
 const RUNS = [
@@ -20,10 +20,11 @@ export function demoState(settings: Settings) {
   const names = NAMES[settings.lang];
   return {
     demo: true,
-    character: { name: settings.name, realm: settings.realm, guild: 'Silent Vigil', spec: names.spec, level: 90, ilvl: 284, avatar: '/img/sample-portrait.svg' },
-    stats: { crit: 24, haste: 31, mastery: 46, versatility: 8 },
+    character: { name: settings.name, realm: settings.realm, guild: 'Silent Vigil', spec: names.spec, level: 90, ilvl: 284, avatar: '/img/sample-portrait.svg', hero: names.hero },
+    stats: { crit: 24, haste: 31, mastery: 46, versatility: 8, primary: { id: 'intellect', value: 18_642 }, health: 512_400, leech: 3.2, avoidance: 1.6, speed: 4.1 },
     mplus: {
       score: 2847,
+      color: '#a335ee',
       scorePct: 69,
       bestKey: 14,
       timed: 7,

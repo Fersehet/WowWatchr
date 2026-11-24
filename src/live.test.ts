@@ -16,11 +16,15 @@ const API: Record<string, unknown> = {
   [CHAR]: {
     name: 'Vaelric', realm: { name: names('Der Rat von Dalaran', 'Der Rat von Dalaran') }, guild: { name: 'Silent Vigil' },
     level: 90, equipped_item_level: 284, active_spec: { name: names('Frost', 'Frost') }, character_class: { name: names('Mage', 'Magier') },
+    active_hero_talent_tree: { name: names('Frostfire', 'Frostfeuer') },
   },
-  [`${CHAR}/statistics`]: { melee_crit: { value: 12.1 }, spell_crit: { value: 24.4 }, spell_haste: { value: 30.6 }, mastery: { value: 46.2 }, versatility_damage_done_bonus: 8.1 },
+  [`${CHAR}/statistics`]: {
+    melee_crit: { value: 12.1 }, spell_crit: { value: 24.4 }, spell_haste: { value: 30.6 }, mastery: { value: 46.2 }, versatility_damage_done_bonus: 8.1,
+    health: 512400.4, strength: { effective: 940 }, agility: { effective: 1210 }, intellect: { effective: 18642 }, lifesteal: { value: 3.24 }, avoidance: { value: 0 }, speed: { value: 4.06 },
+  },
   [`${CHAR}/character-media`]: { assets: [{ key: 'avatar', value: 'https://render.worldofwarcraft.com/eu/x-avatar.jpg' }] },
   [`${CHAR}/mythic-keystone-profile/season/17`]: {
-    mythic_rating: { rating: 2847.4 },
+    mythic_rating: { rating: 2847.4, color: { r: 163, g: 53, b: 238, a: 1 } },
     best_runs: [
       { completed_timestamp: 1, duration: 1_400_000, keystone_level: 14, is_completed_within_time: true, dungeon: { id: 161, name: names('Skyreach', 'Himmelsnadel') },
         mythic_rating: { rating: 301.26 }, keystone_affixes: [{ name: names('Fortified', 'Verstärkt') }],
@@ -80,9 +84,13 @@ test('baut den Overlay-Zustand aus den Blizzard-Daten, auf Deutsch', async () =>
   assert.ok(state);
   assert.deepEqual(state.character, {
     name: 'Vaelric', realm: 'Der Rat von Dalaran', guild: 'Silent Vigil', spec: 'Frost-Magier', level: 90, ilvl: 284,
-    avatar: 'https://render.worldofwarcraft.com/eu/x-avatar.jpg',
+    avatar: 'https://render.worldofwarcraft.com/eu/x-avatar.jpg', hero: 'Frostfeuer',
   });
-  assert.deepEqual(state.stats, { crit: 24, haste: 31, mastery: 46, versatility: 8 });
+  // Hauptattribut = das höchste der drei, Tertiärwerte mit einer Nachkommastelle
+  assert.deepEqual(state.stats, {
+    crit: 24, haste: 31, mastery: 46, versatility: 8, primary: { id: 'intellect', value: 18642 }, health: 512400, leech: 3.2, avoidance: 0, speed: 4.1,
+  });
+  assert.equal(state.mplus.color, '#a335ee');
   assert.deepEqual([state.mplus.score, state.mplus.bestKey, state.mplus.timed, state.mplus.total], [2847, 14, 1, 8]);
   // Neueste zuerst; 23:20 liegt unter der +2-Grenze (24:00), aber über +3 (18:00)
   assert.deepEqual(state.mplus.runs, [

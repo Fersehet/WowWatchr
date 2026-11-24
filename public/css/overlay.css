@@ -31,7 +31,19 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 .a::before { content: ''; position: absolute; inset: 0; background: var(--accent); opacity: .14; -webkit-mask-image: radial-gradient(380px 220px at 100% 0%, #000, transparent 70%); mask-image: radial-gradient(380px 220px at 100% 0%, #000, transparent 70%); pointer-events: none; }
 .a::after { content: ''; position: absolute; top: 0; left: 24px; width: 64px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
 .a > * { position: relative; }
-.a .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: auto; }
+.a .sub { font-size: 14px; color: #d3d7df; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.a .sub .dot { margin: 0 6px; color: #8b909c; }
+.a .sub2 { font-size: 13px; color: #b1b7c3; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Charakter: Zusammenfassung (Wertung, Raid, Key, Hauptattribut, Leben), darunter die Werte */
+.a .sum { display: flex; justify-content: space-between; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.1); }
+.a .sum .lbl, .a .stats .lbl { white-space: nowrap; }
+.a .sum .big { white-space: nowrap; }
+.a .stats { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; }
+.a .stats > div { flex: none; }
+.a .stats .lbl { font-size: 11px; letter-spacing: .02em; }
+.a .stats .num { font-size: 17px; line-height: 1.2; }
+.a .stats .t3 .num { color: #c9ced8; font-weight: 600; }
+.a .stats .t3:first-of-type { padding-left: 10px; border-left: 1px solid rgba(255,255,255,.12); }
 .a .bottom { margin-top: auto; }
 /* Raid: ein Segment pro Boss, wie die Punkte in der Leiste */
 .a .rp { display: flex; gap: 4px; }
@@ -43,6 +55,12 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 .c .div { width: 1px; height: 44px; background: rgba(255,255,255,.2); flex: none; }
 .c .lbl { white-space: nowrap; }
 .c .tile { width: 152px; flex: none; }
+.c .who { flex: 0 1 170px; min-width: 90px; }
+.c .who > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c .spec { font-size: 12px; color: #d3d7df; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c .sec { display: grid; grid-template-columns: auto auto; gap: 2px 16px; min-width: 0; flex: none; margin-left: auto; }
+.c .sec > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.c .sec .lbl { font-size: 12px; }
 .c .tile .name { font-size: 12px; font-weight: 400; color: #d3d7df; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .c .result.up { color: #46d3b0; }
 .c .result.down { color: #ff8080; }
@@ -60,7 +78,19 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 .d .head { padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #262a33; font-size: 14px; font-weight: 600; }
 .d .line { padding: 12px 16px; border-bottom: 1px solid #262a33; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .d .line:last-child { border-bottom: 0; }
-.d .hero { align-items: center; padding: 22px 16px 18px; border-bottom: 1px solid #262a33; }
+.d .hero { align-items: center; padding: 12px 16px 10px; border-bottom: 1px solid #262a33; }
+.d .hero .sub { font-size: 14px; color: #d3d7df; margin-top: 4px; text-align: center; }
+.d .hero .sub2 { font-size: 13px; color: #b1b7c3; margin-top: 2px; text-align: center; }
+/* Charakter: Werte als Raster, zwei Spalten, die kleinen Werte enger */
+.d .cells { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #262a33; }
+.d .cells > div { display: flex; flex-direction: column; gap: 2px; padding: 8px 16px; min-width: 0; }
+.d .cells > div:nth-child(odd) { border-right: 1px solid #262a33; }
+.d .cells > div:nth-child(n+3) { border-top: 1px solid #262a33; }
+.d .cells .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d .cells.small > div { padding: 6px 16px; }
+.d .cells.small .num { font-size: 16px; }
+.d .tert { padding: 6px 0; }
+.d .tert > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 3px 16px; font-size: 14px; font-weight: 600; color: #c9ced8; }
 .d .diff { padding: 16px; border-bottom: 1px solid #262a33; justify-content: center; gap: 12px; }
 .d .diff:last-child { border-bottom: 0; }
 .d .diff b { color: #f2f2f2; }
@@ -71,3 +101,4 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 /* Farbig (Einstellung): jede Schwierigkeit in ihrer Farbe statt in der Akzentfarbe, in allen Layouts */
 .qc .q-normal, .qc .q-heroic, .qc .q-mythic { --accent: var(--q); }
 .qc .dname { color: var(--q); }
+.d .cells .big { font-size: 24px; }
