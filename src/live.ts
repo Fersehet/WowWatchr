@@ -198,6 +198,12 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
       haste: pct(stats.melee_haste?.value, stats.ranged_haste?.value, stats.spell_haste?.value),
       mastery: pct(stats.mastery?.value),
       versatility: pct(stats.versatility_damage_done_bonus),
+      // WoW Forever spielt nach den Regeln von 2004: dort gibt es kein Tempo, keine
+      // Meisterschaft und Vielseitigkeit, dafür zählen Ausweichen, Kraft und Rüstung
+      dodge: pct(stats.dodge?.value),
+      attackPower: Math.round(Number(stats.attack_power) || 0),
+      spellPower: Math.round(Number(stats.spell_power) || 0),
+      armor: Math.round(Number(stats.armor?.effective) || 0),
       ...mainStats(stats),
     },
     mplus: {

@@ -21,6 +21,20 @@ const AVATAR = (size, label, url) => url
   : `<svg class="avatar" width="${size}" height="${size}" viewBox="0 0 72 72" role="img" aria-label="${esc(label)}"><circle cx="36" cy="28" r="12" fill="#8b909c"/><path d="M12 66c2-16 12-23 24-23s22 7 24 23z" fill="#8b909c"/></svg>`;
 
 /** Bereitet die Werte einmal auf, damit jedes Layout nur noch Markup enthält. */
+// WoW Forever spielt nach den Regeln von 2004: kein Tempo, keine Meisterschaft, keine
+// Vielseitigkeit. Dort zählen Krit, Ausweichen, Angriffs- bzw. Zaubermacht (je nach
+// Hauptattribut) und Rüstung.
+function classicStats(s, t, lang, pct) {
+  const num = (n) => (n ?? 0).toLocaleString(lang).replace(/\s/g, ' ');
+  const power = s.primary?.id === 'intellect' ? 'spellPower' : 'attackPower';
+  return [
+    { label: t.stat.crit, value: pct(s.crit ?? 0) },
+    { label: t.classic.dodge, value: pct(s.dodge ?? 0) },
+    { label: t.classic[power], value: num(s[power]) },
+    { label: t.classic.armor, value: num(s.armor) },
+  ];
+}
+
 function view(state, lang, game) {
   const t = TEXTS[lang];
   const pct = (n) => (lang === 'en' ? `${n}%` : `${n} %`);
@@ -45,11 +59,11 @@ function view(state, lang, game) {
     best: `+${m.bestKey}`,
     timed: `${m.timed}/${m.total}`,
     // Fehlt die Statistik bei Blizzard, bleibt die Werte-Zeile leer
-    stats: state.stats ? Object.keys(t.stat).map((id) => ({ label: t.stat[id], value: pct(state.stats[id]) })) : [],
+    stats: !state.stats ? [] : forever ? classicStats(state.stats, t, lang, pct) : Object.keys(t.stat).map((id) => ({ label: t.stat[id], value: pct(state.stats[id]) })),
     main: state.stats?.primary ? { label: t.main[state.stats.primary.id], value: state.stats.primary.value.toLocaleString(lang).replace(/\s/g, ' ') } : null,
     health: state.stats?.health ? new Intl.NumberFormat(lang, { notation: 'compact', maximumFractionDigits: state.stats.health >= 1e5 && state.stats.health < 1e6 ? 0 : 1 }).format(state.stats.health).replace(/\s/g, ' ') : null,
-    // Tertiärwerte nur, wenn wenigstens einer da ist
-    tert: state.stats && ['leech', 'avoidance', 'speed'].some((id) => state.stats[id] > 0)
+    // Tertiärwerte nur, wenn wenigstens einer da ist (WoW Forever kennt keine)
+    tert: !forever && state.stats && ['leech', 'avoidance', 'speed'].some((id) => state.stats[id] > 0)
       ? ['leech', 'avoidance', 'speed'].map((id) => ({ label: t.tert[id], value: pct((state.stats[id] ?? 0).toLocaleString(lang, { maximumFractionDigits: 1 })) }))
       : [],
     runs: m.runs.map((run) => ({

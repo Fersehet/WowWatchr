@@ -21,6 +21,7 @@ const API: Record<string, unknown> = {
   [`${CHAR}/statistics`]: {
     melee_crit: { value: 12.1 }, spell_crit: { value: 24.4 }, spell_haste: { value: 30.6 }, mastery: { value: 46.2 }, versatility_damage_done_bonus: 8.1,
     health: 512400.4, strength: { effective: 940 }, agility: { effective: 1210 }, intellect: { effective: 18642 }, lifesteal: { value: 3.24 }, avoidance: { value: 0 }, speed: { value: 4.06 },
+    dodge: { value: 3.04 }, attack_power: 1504, spell_power: 21880.6, armor: { base: 2100, effective: 2311 },
   },
   [`${CHAR}/character-media`]: { assets: [{ key: 'avatar', value: 'https://render.worldofwarcraft.com/eu/x-avatar.jpg' }] },
   [`${CHAR}/mythic-keystone-profile/season/17`]: {
@@ -88,7 +89,8 @@ test('baut den Overlay-Zustand aus den Blizzard-Daten, auf Deutsch', async () =>
   });
   // Hauptattribut = das höchste der drei, Tertiärwerte mit einer Nachkommastelle
   assert.deepEqual(state.stats, {
-    crit: 24, haste: 31, mastery: 46, versatility: 8, primary: { id: 'intellect', value: 18642 }, health: 512400, leech: 3.2, avoidance: 0, speed: 4.1,
+    crit: 24, haste: 31, mastery: 46, versatility: 8, dodge: 3, attackPower: 1504, spellPower: 21881, armor: 2311,
+    primary: { id: 'intellect', value: 18642 }, health: 512400, leech: 3.2, avoidance: 0, speed: 4.1,
   });
   assert.equal(state.mplus.color, '#a335ee');
   assert.deepEqual([state.mplus.score, state.mplus.bestKey, state.mplus.timed, state.mplus.total], [2847, 14, 1, 8]);

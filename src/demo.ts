@@ -21,7 +21,7 @@ export function demoState(settings: Settings) {
   return {
     demo: true,
     character: { name: settings.name, realm: settings.realm, guild: 'Silent Vigil', spec: names.spec, level: 90, ilvl: 284, avatar: '/img/sample-portrait.svg', hero: names.hero },
-    stats: { crit: 24, haste: 31, mastery: 46, versatility: 8, primary: { id: 'intellect', value: 18_642 }, health: 512_400, leech: 3.2, avoidance: 1.6, speed: 4.1 },
+    stats: { crit: 24, haste: 31, mastery: 46, versatility: 8, dodge: 5, attackPower: 1_512, spellPower: 1_240, armor: 2_310, primary: { id: 'intellect', value: 18_642 }, health: 512_400, leech: 3.2, avoidance: 1.6, speed: 4.1 },
     mplus: {
       score: 2847,
       color: '#a335ee',
