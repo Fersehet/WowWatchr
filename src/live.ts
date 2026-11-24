@@ -190,15 +190,20 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
       level: profile.level ?? 0,
       ilvl: profile.equipped_item_level ?? 0,
       avatar: media?.assets?.find((a: Json) => a.key === 'avatar')?.value ?? null,
+      // Heldentalent (seit The War Within), fehlt es bei Blizzard, bleibt es leer
+      hero: tr(profile.active_hero_talent_tree?.name),
     },
     stats: stats && {
       crit: pct(stats.melee_crit?.value, stats.ranged_crit?.value, stats.spell_crit?.value),
       haste: pct(stats.melee_haste?.value, stats.ranged_haste?.value, stats.spell_haste?.value),
       mastery: pct(stats.mastery?.value),
       versatility: pct(stats.versatility_damage_done_bonus),
+      ...mainStats(stats),
     },
     mplus: {
       score,
+      // Farbe der Wertung, wie im Spiel und auf der Arsenal-Seite
+      color: hex(season?.mythic_rating?.color),
       scorePct: Math.min(100, Math.round((score / SCORE_FULL) * 100)),
       bestKey: Math.max(0, ...timed.map((run) => run.keystone_level)),
       timed: timed.length,
@@ -227,6 +232,27 @@ export async function fetchLive(settings: Settings, blizzard: Blizzard) {
       }),
     },
   };
+}
+
+/** Hauptattribut (das höchste von Stärke, Beweglichkeit, Intelligenz), Leben und Tertiärwerte in Prozent */
+function mainStats(stats: Json) {
+  const primary = (['strength', 'agility', 'intellect'] as const)
+    .map((id) => ({ id, value: Math.round(Number(stats[id]?.effective) || 0) }))
+    .reduce((best, x) => (x.value > best.value ? x : best));
+  const one = (v: unknown) => Math.round((Number(v) || 0) * 10) / 10;
+  return {
+    primary: primary.value > 0 ? primary : null,
+    health: Math.round(Number(stats.health) || 0) || null,
+    leech: one(stats.lifesteal?.value),
+    avoidance: one(stats.avoidance?.value),
+    speed: one(stats.speed?.value),
+  };
+}
+
+/** Blizzard-Farbe {r, g, b, a} (0-255) als #rrggbb */
+function hex(c: Json | undefined) {
+  if (!c || ![c.r, c.g, c.b].every((v) => Number.isFinite(Number(v)))) return null;
+  return '#' + [c.r, c.g, c.b].map((v) => Math.max(0, Math.min(255, Math.round(Number(v)))).toString(16).padStart(2, '0')).join('');
 }
 
 export type LiveState = Omit<NonNullable<Awaited<ReturnType<typeof fetchLive>>>, 'snapshot' | 'realmSlug'>;
