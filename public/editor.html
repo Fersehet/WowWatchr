@@ -131,7 +131,19 @@
       </div>
       <div class="panel list-panel">
         <div class="panel-head"><span id="listHead"></span><span id="listHint"></span></div>
+        <div class="run-filter">
+          <label><span id="dayLabel"></span> <input type="date" id="runDay"></label>
+          <button id="runDayAll" type="button" hidden></button>
+        </div>
         <ul class="runs" id="runList"></ul>
+        <div class="pager" id="runPager" hidden>
+          <button id="pagePrev" type="button" class="page-btn">‹</button>
+          <span id="pageInfo"></span>
+          <button id="pageNext" type="button" class="page-btn">›</button>
+          <label class="per-page"><span id="perPageLabel"></span>
+            <select id="perPage"><option>10</option><option>25</option><option>50</option><option>100</option></select>
+          </label>
+        </div>
       </div>
     </div>
     <script type="module" src="/js/editor.js"></script>

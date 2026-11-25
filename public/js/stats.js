@@ -296,7 +296,22 @@ function row(id, badge, title, sub, result, at, detail) {
     <div class="detail"${isOpen ? '' : ' hidden'}>${detail}</div></li>`;
 }
 
+/** Seiten der Liste wie bei FaceitWatchr; Einträge pro Seite merkt sich der Browser */
+const PER_PAGE = [10, 25, 50, 100];
+let perPage = (() => {
+  try { const n = Number(localStorage.getItem('ww-runs-per-page')); return PER_PAGE.includes(n) ? n : 25; } catch { return 25; }
+})();
+let page = 0;
+let listTexts = null;
+/** Gewählter Tag (YYYY-MM-DD, Ortszeit) oder '' für alle */
+let pickedDay = '';
+const dayKey = (at) => {
+  const d = new Date(at);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 function renderList(t) {
+  listTexts = t;
   $('listHead').textContent = forever() ? t.stListHeadRaids : t.stListHead;
   $('listHint').textContent = t.stListHint;
   // Warcraft Logs gibt es nur für Retail
@@ -315,9 +330,55 @@ function renderList(t) {
     open.add(rows[0].id);
     autoOpened = true;
   }
-  $('runList').innerHTML = rows.map((r) => r.html()).join('') || `<li class="empty">${esc(t.stNoRuns)}</li>`;
+  // Tag-Filter: Datumsfeld nur vom ersten bis zum letzten Tag mit Einträgen
+  const input = $('runDay');
+  if (rows.length) {
+    input.min = dayKey(rows[rows.length - 1].at);
+    input.max = dayKey(rows[0].at);
+  }
+  input.value = pickedDay;
+  $('dayLabel').textContent = t.stDay;
+  $('runDayAll').textContent = t.stAllDays;
+  $('runDayAll').hidden = !pickedDay;
+  const shown = pickedDay ? rows.filter((r) => dayKey(r.at) === pickedDay) : rows;
+  const pages = Math.max(1, Math.ceil(shown.length / perPage));
+  page = Math.min(page, pages - 1);
+  $('runList').innerHTML = shown.slice(page * perPage, (page + 1) * perPage).map((r) => r.html()).join('') || `<li class="empty">${esc(pickedDay ? t.stNoDay : t.stNoRuns)}</li>`;
   for (const li of $('runList').querySelectorAll('li.open')) loadFightStats(li);
+  $('runPager').hidden = !shown.length;
+  $('pageInfo').textContent = fill(t.stPageOf, { a: page + 1, b: pages });
+  $('perPageLabel').textContent = t.stPerPage;
+  $('pagePrev').setAttribute('aria-label', t.stPagePrev);
+  $('pageNext').setAttribute('aria-label', t.stPageNext);
+  $('pagePrev').disabled = page === 0;
+  $('pageNext').disabled = page >= pages - 1;
+  $('perPage').value = String(perPage);
 }
+
+// Blättern: danach an den Anfang der Liste, damit man nicht unten auf der neuen Seite landet
+function turn(delta) {
+  page += delta;
+  renderList(listTexts);
+  $('runList').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+}
+$('runDay').addEventListener('change', (e) => {
+  pickedDay = e.target.value;
+  page = 0;
+  renderList(listTexts);
+});
+$('runDayAll').addEventListener('click', () => {
+  pickedDay = '';
+  page = 0;
+  renderList(listTexts);
+});
+$('pagePrev').addEventListener('click', () => turn(-1));
+$('pageNext').addEventListener('click', () => turn(1));
+$('perPage').addEventListener('change', (e) => {
+  perPage = Number(e.target.value);
+  page = 0;
+  try { localStorage.setItem('ww-runs-per-page', String(perPage)); } catch {}
+  renderList(listTexts);
+});
 
 // Boss in einem Raid-Abend anklicken: dessen Spielerwerte zeigen
 function pickBoss(tr) {

@@ -15,7 +15,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 - Three layouts: a **Classic** card, a slim **Bar** and a tall **Sidebar**
 - One OBS URL that switches through the pages on its own, or one URL per page
 - An editor in your browser with a live preview, protected by a login if you set a password, and every change shows up in OBS right away
-- A **Statistics** page in the editor: your recent dungeons and raids, each row opens with the group, timer, affixes and the bosses killed
+- A **Statistics** page in the editor: your recent dungeons and raids, each row opens with the group, timer, affixes and the bosses killed, with a day filter and pages
 - Real character data from the official Blizzard API, with your own free key, and optionally Warcraft Logs for tries, kill times and DPS, HPS, deaths, interrupts and parses per player
 - **Discord posts** through a webhook: every new best dungeon run and every boss kill, and with Warcraft Logs every logged run, filled in with the stats of every player once the report is up
 - Editor and overlay in English, German, Russian and French
@@ -26,7 +26,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 
 ![Editor with the overlay preview](docs/screenshots/editor.png)
 
-**Statistics:** your M+ rating per dungeon, the current season, and your recent dungeons and raids. Click a row to see the group, timer, affixes, the bosses killed and, with Warcraft Logs, tries, kill times and the stats of every player.
+**Statistics:** your M+ rating per dungeon, the current season, and your recent dungeons and raids. Click a row to see the group, timer, affixes, the bosses killed and, with Warcraft Logs, tries, kill times and the stats of every player. Pick a day to see only that day's runs. The list is split into pages with arrows at the bottom; choose 10, 25, 50 or 100 rows per page, and the editor remembers it.
 
 ![Statistics view with best runs, season and recent dungeons and raids](docs/screenshots/stats.png)
 
