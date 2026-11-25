@@ -122,6 +122,20 @@ button:hover { border-color: var(--muted); }
 button[type='submit'] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 button[type='submit']:hover { filter: brightness(1.06); }
 
+/* Tag-Filter der Run-Liste, wie bei FaceitWatchr */
+.run-filter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: -4px 0 14px; }
+.run-filter label { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+.run-filter input { color-scheme: dark; font-family: var(--f-mono); font-size: 13px; }
+
+/* Seiten der Run-Liste, wie bei FaceitWatchr */
+.pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.pager #pageInfo { min-width: 120px; text-align: center; font: 500 13px/1 var(--f-mono); color: var(--muted); }
+.page-btn { width: 38px; height: 34px; padding: 0; font: 600 20px/1 var(--f-body); }
+.page-btn:disabled { opacity: .35; cursor: default; }
+.per-page { display: flex; align-items: center; gap: 8px; margin-left: 12px; color: var(--muted); font-size: 13px; }
+.per-page select { font-family: var(--f-mono); }
+@media (max-width: 480px) { .per-page { margin-left: 0; flex-basis: 100%; justify-content: center; } }
+
 /* Layout-Auswahl */
 .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .choice { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; height: 64px; padding: 8px 6px; text-align: center; white-space: normal; }
