@@ -4,3 +4,4 @@ data/
 *.log
 # Optionale eigene Startseite (siehe SITE_DIR in .env.example)
 website/
+node_modules

@@ -26,7 +26,7 @@ Show your **World of Warcraft** stats in your OBS stream: character, Mythic+ and
 
 ![Editor with the overlay preview](docs/screenshots/editor.png)
 
-**Statistics:** your M+ rating per dungeon, the current season, and your recent dungeons and raids. Click a row to see the group, timer, affixes, the bosses killed and, with Warcraft Logs, tries, kill times and the stats of every player. Pick a day to see only that day's runs. The list is split into pages with arrows at the bottom; choose 10, 25, 50 or 100 rows per page, and the editor remembers it.
+**Statistics:** your M+ rating per dungeon, the current season, and your recent dungeons and raids. Click a row to see the group, timer, affixes, the bosses killed and, with Warcraft Logs, tries, kill times and the stats of every player. Pick a day to see only that day's runs. The list is split into pages with arrows at the bottom; choose 10, 25, 50 or 100 rows per page, and your browser remembers it.
 
 ![Statistics view with best runs, season and recent dungeons and raids](docs/screenshots/stats.png)
 

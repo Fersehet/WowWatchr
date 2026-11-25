@@ -33,18 +33,22 @@ const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (_, k) => vars[k]);
 
 export async function loadStats(uiLang, uiGame) {
   lang = uiLang;
-  game = uiGame;
   const [stats, overlay] = await Promise.all([
     fetch('/api/stats', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     fetch('/api/state', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
   ]);
   if (stats) data = stats;
   if (overlay) state = overlay;
-  renderStats(uiLang, game);
+  renderStats(uiLang, uiGame);
 }
 
 export function renderStats(uiLang, uiGame) {
   lang = uiLang;
+  // Anderes Spiel (Retail/Forever): Tag und Seite gelten für die alte Liste
+  if (uiGame !== game) {
+    pickedDay = '';
+    page = 0;
+  }
   game = uiGame;
   const t = TEXTS[lang];
   // Pro Dungeon zählt der neueste gespeicherte Run, das ist der aktuelle Bestwert bei Blizzard
@@ -180,8 +184,9 @@ const parseColor = (p) => (p >= 100 ? '#e5cc80' : p >= 99 ? '#e268a8' : p >= 95 
 function loadFightStats(root) {
   for (const box of root.querySelectorAll('.log-stats')) {
     const key = `${box.dataset.code}-${box.dataset.fight}`;
-    // Nur sichtbare Kämpfe abfragen, das schont das Abfrage-Kontingent bei Warcraft Logs
-    if (fightStats.has(key) || box.closest('[hidden]')) continue;
+    // Nur aufgeklappte Kämpfe abfragen, das schont das Abfrage-Kontingent bei Warcraft Logs.
+    // Nur innerhalb der Liste prüfen: die Statistik-Seite selbst ist beim ersten Zeichnen noch versteckt (Wechsel-Animation)
+    if (fightStats.has(key) || box.closest('#runList [hidden]')) continue;
     fightStats.set(key, 'loading');
     fetch(`/api/stats/fight?code=${encodeURIComponent(box.dataset.code)}&fight=${box.dataset.fight}`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -229,7 +234,7 @@ function logRaidRow(t, report) {
       }).join('')}
     </tbody></table></div>
     ${list.map((b, i) => { const f = b.kill ?? b.tries.at(-1); return `<div class="boss-stats" data-boss="${i}"${i ? ' hidden' : ''}><div class="sub">${esc(name(b.name))} · ${esc(b.kill ? t.stKill : t.stLastTry)}</div>${logBlock(t, report.code, f.id, false)}</div>`; }).join('')}`;
-  return { id, at: report.end, day: new Date(report.start).toDateString(), html: () => row(id, raidBadge(t), name(report.zone), `${diffs} · ${hmm(length)} · ${t.stLogs}`, `<span class="res gold">${esc(killed === 1 ? t.stBossOne : fill(t.stBosses, { n: killed }))}</span>`, report.start, detail) };
+  return { id, at: report.end, dayAt: report.start, day: new Date(report.start).toDateString(), html: () => row(id, raidBadge(t), name(report.zone), `${diffs} · ${hmm(length)} · ${t.stLogs}`, `<span class="res gold">${esc(killed === 1 ? t.stBossOne : fill(t.stBosses, { n: killed }))}</span>`, report.start, detail) };
 }
 
 /** Dungeons aus Warcraft Logs: an den passenden Blizzard-Run hängen, sonst eigene Zeile */
@@ -309,6 +314,8 @@ const dayKey = (at) => {
   const d = new Date(at);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
+/** Tag einer Zeile: der angezeigte Tag (Raids aus Warcraft Logs zeigen den Start, sortiert wird nach dem Ende) */
+const rowDay = (r) => dayKey(r.dayAt ?? r.at);
 
 function renderList(t) {
   listTexts = t;
@@ -333,14 +340,15 @@ function renderList(t) {
   // Tag-Filter: Datumsfeld nur vom ersten bis zum letzten Tag mit Einträgen
   const input = $('runDay');
   if (rows.length) {
-    input.min = dayKey(rows[rows.length - 1].at);
-    input.max = dayKey(rows[0].at);
+    const days = rows.map(rowDay).sort();
+    input.min = days[0];
+    input.max = days[days.length - 1];
   }
-  input.value = pickedDay;
+  if (input.value !== pickedDay && document.activeElement !== input) input.value = pickedDay;
   $('dayLabel').textContent = t.stDay;
   $('runDayAll').textContent = t.stAllDays;
   $('runDayAll').hidden = !pickedDay;
-  const shown = pickedDay ? rows.filter((r) => dayKey(r.at) === pickedDay) : rows;
+  const shown = pickedDay ? rows.filter((r) => rowDay(r) === pickedDay) : rows;
   const pages = Math.max(1, Math.ceil(shown.length / perPage));
   page = Math.min(page, pages - 1);
   $('runList').innerHTML = shown.slice(page * perPage, (page + 1) * perPage).map((r) => r.html()).join('') || `<li class="empty">${esc(pickedDay ? t.stNoDay : t.stNoRuns)}</li>`;
@@ -357,8 +365,10 @@ function renderList(t) {
 
 // Blättern: danach an den Anfang der Liste, damit man nicht unten auf der neuen Seite landet
 function turn(delta) {
-  page += delta;
+  page = Math.max(0, page + delta);
   renderList(listTexts);
+  // Wird der gedrückte Pfeil deaktiviert (erste/letzte Seite), den Fokus auf den anderen setzen
+  if (document.activeElement?.disabled || document.activeElement === document.body) (delta > 0 ? $('pagePrev') : $('pageNext')).focus();
   $('runList').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 $('runDay').addEventListener('change', (e) => {

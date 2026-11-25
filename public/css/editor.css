@@ -134,6 +134,7 @@ button[type='submit']:hover { filter: brightness(1.06); }
 .page-btn:disabled { opacity: .35; cursor: default; }
 .per-page { display: flex; align-items: center; gap: 8px; margin-left: 12px; color: var(--muted); font-size: 13px; }
 .per-page select { font-family: var(--f-mono); }
+@media (max-width: 480px) { .per-page { margin-left: 0; flex-basis: 100%; justify-content: center; } }
 
 /* Layout-Auswahl */
 .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
